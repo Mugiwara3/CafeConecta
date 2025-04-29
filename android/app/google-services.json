@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "831848720948",
+    "project_id": "cafeconnecta-6a858",
+    "storage_bucket": "cafeconnecta-6a858.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:831848720948:android:c7dbfd23328ca69d23b861",
+        "android_client_info": {
+          "package_name": "com.app.cafeconecta"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDa5elKRGGggdOks_Ike_pBKV2SnyM6eB4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:831848720948:android:fdc4cc7d5e4366ed23b861",
+        "android_client_info": {
+          "package_name": "com.example.CafeConecta"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDa5elKRGGggdOks_Ike_pBKV2SnyM6eB4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
