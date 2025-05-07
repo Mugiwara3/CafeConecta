@@ -1,11 +1,15 @@
-
 import 'package:flutter/material.dart';
 import 'package:miapp_cafeconecta/models/farm_model.dart';
 
 class FincaInfoWidget extends StatelessWidget {
   final Map<String, dynamic> finca;
+  final Farm farm;
 
-  const FincaInfoWidget({super.key, required this.finca, required Farm farm});
+  const FincaInfoWidget({
+    super.key, 
+    required this.finca, 
+    required this.farm
+  });
 
   @override
   Widget build(BuildContext context) {

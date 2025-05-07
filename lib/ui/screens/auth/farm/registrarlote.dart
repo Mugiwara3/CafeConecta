@@ -13,20 +13,21 @@ class _RegistrarLoteScreenState extends State<RegistrarLoteScreen> {
   final TextEditingController nombreController = TextEditingController();
   final TextEditingController alturaController = TextEditingController();
   final TextEditingController variedadController = TextEditingController();
+  final TextEditingController hectareasController = TextEditingController();
   final TextEditingController matasController = TextEditingController();
 
   void _guardarLote() {
-  if (_formKey.currentState!.validate()) {
-    final nuevoLote = FarmPlot(
-      name: nombreController.text,
-      hectares: double.tryParse(matasController.text) ?? 0,
-      altitude: double.tryParse(alturaController.text) ?? 0,
-      variety: variedadController.text,
-      plants: int.tryParse(matasController.text) ?? 0,
-    );
-    Navigator.pop(context, nuevoLote);
+    if (_formKey.currentState!.validate()) {
+      final nuevoLote = FarmPlot(
+        name: nombreController.text,
+        hectares: double.tryParse(hectareasController.text) ?? 0,
+        altitude: double.tryParse(alturaController.text) ?? 0,
+        variety: variedadController.text,
+        plants: int.tryParse(matasController.text) ?? 0,
+      );
+      Navigator.pop(context, nuevoLote);
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +64,7 @@ class _RegistrarLoteScreenState extends State<RegistrarLoteScreen> {
                 controller: alturaController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: "Altura",
+                  labelText: "Altura (msnm)",
                   prefixIcon: Icon(Icons.terrain),
                   border: OutlineInputBorder(),
                 ),
@@ -80,6 +81,18 @@ class _RegistrarLoteScreenState extends State<RegistrarLoteScreen> {
                 ),
                 validator: (value) =>
                     value!.isEmpty ? "Ingrese la variedad" : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: hectareasController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: "Hectáreas",
+                  prefixIcon: Icon(Icons.landscape),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) =>
+                    value!.isEmpty ? "Ingrese las hectáreas" : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
