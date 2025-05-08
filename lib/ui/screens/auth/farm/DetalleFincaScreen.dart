@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:miapp_cafeconecta/models/farm_model.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/farm/lotes_screen.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/farm/widgets/farm_info_card.dart';
-import 'package:miapp_cafeconecta/ui/screens/auth/farm/widgets/farm_service.dart';
+import 'package:miapp_cafeconecta/ui/screens/auth/farm/widgets/service/farm_service.dart';
 
 class FincaDetalleScreen extends StatefulWidget {
   final Farm farm;

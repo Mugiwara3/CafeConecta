@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:miapp_cafeconecta/models/farm_model.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/farm/registrarlote.dart';
-import 'package:miapp_cafeconecta/ui/screens/auth/farm/widgets/farm_service.dart';
+import 'package:miapp_cafeconecta/ui/screens/auth/farm/widgets/service/farm_service.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/farm/widgets/plot_list_item.dart';
 
 
