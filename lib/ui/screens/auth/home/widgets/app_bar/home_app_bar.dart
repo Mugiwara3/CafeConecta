@@ -4,11 +4,13 @@ import 'package:miapp_cafeconecta/ui/screens/auth/home/widgets/home_option.dart'
 import 'package:provider/provider.dart';
 
 class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final List<Widget>? actions;
   final Function(String)? onMenuSelected;
   
   const HomeAppBar({
     super.key,
     this.onMenuSelected,
+    this.actions,
   });
 
   @override
@@ -43,28 +45,29 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ],
       ),
-      leading: PopupMenuButton<String>(
-        onSelected: (value) {
-          if (onMenuSelected != null) {
-            onMenuSelected!(value);
-          }
-        },
-        itemBuilder: (BuildContext context) {
-          return homeOptions.map((option) {
-            return PopupMenuItem<String>(
-              value: option.route,
-              child: Row(
-                children: [
-                  Icon(option.icon, color: Colors.brown),
-                  const SizedBox(width: 10),
-                  Text(option.title),
-                ],
-              ),
-            );
-          }).toList();
-        },
-      ),
-      actions: [
+      actions: actions ?? [
+        PopupMenuButton<HomeOption>(
+          icon: const Icon(Icons.more_vert),
+          onSelected: (HomeOption option) {
+            if (onMenuSelected != null) {
+              onMenuSelected!(option.route);
+            }
+          },
+          itemBuilder: (BuildContext context) {
+            return homeOptions.map((HomeOption option) {
+              return PopupMenuItem<HomeOption>(
+                value: option,
+                child: Row(
+                  children: [
+                    Icon(option.icon, color: option.route == "/cerrar_sesion" ? Colors.red : Colors.brown[700]),
+                    const SizedBox(width: 10),
+                    Text(option.title),
+                  ],
+                ),
+              );
+            }).toList();
+          },
+        ),
         IconButton(
           icon: const Icon(Icons.notifications),
           onPressed: () {},

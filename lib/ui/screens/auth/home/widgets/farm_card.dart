@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:miapp_cafeconecta/models/farm_model.dart';
 
-
 class FarmCard extends StatelessWidget {
   final Farm farm;
   final VoidCallback onTap;
@@ -93,26 +92,52 @@ class FarmCard extends StatelessWidget {
     );
   }
 
-  // Método para construir la lista de lotes de manera segura
-  List<Widget> _buildPlotsList(List<dynamic> plots) {
-    return plots.map((plot) {
-      // Verificación segura de los campos del plot
-      final plotName = plot['name']?.toString() ?? 'Lote sin nombre';
-      final plotHectares = plot['hectares']?.toString() ?? '0';
-      
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: [
-            const Icon(Icons.crop_square, size: 16, color: Colors.green),
-            const SizedBox(width: 8),
-            Text(
-              "$plotName ($plotHectares ha)",
-              style: const TextStyle(fontSize: 14),
-            ),
-          ],
-        ),
-      );
+  // Método corregido para construir la lista de lotes
+  List<Widget> _buildPlotsList(List plots) {
+    return plots.map<Widget>((plot) {
+      if (plot is FarmPlot) {
+        // Si el plot ya es un objeto FarmPlot, accedemos directamente a sus propiedades
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              const Icon(Icons.crop_square, size: 16, color: Colors.green),
+              const SizedBox(width: 8),
+              Text(
+                "${plot.name} (${plot.hectares.toStringAsFixed(1)} ha)",
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+        );
+      } else if (plot is Map) {
+        // Si es un Map, accedemos usando []
+        final plotName = plot['name']?.toString() ?? 'Lote sin nombre';
+        final plotHectares = plot['hectares']?.toString() ?? '0';
+        
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            children: [
+              const Icon(Icons.crop_square, size: 16, color: Colors.green),
+              const SizedBox(width: 8),
+              Text(
+                "$plotName ($plotHectares ha)",
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+        );
+      } else {
+        // Si no es ni FarmPlot ni Map, mostramos un mensaje genérico
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 4),
+          child: Text(
+            "Formato de lote no reconocido",
+            style: TextStyle(fontSize: 14, color: Colors.red),
+          ),
+        );
+      }
     }).toList();
   }
 }

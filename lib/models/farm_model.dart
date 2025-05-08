@@ -18,7 +18,7 @@ class FarmPlot {
   factory FarmPlot.fromMap(Map<String, dynamic> map) {
     return FarmPlot(
       name: map['name'] ?? map['nombre'] ?? '',
-      hectares: (map['hectares'] ?? map['matas'] ?? 0).toDouble(),
+      hectares: (map['hectares'] ?? map['hectareas'] ?? 0).toDouble(),
       altitude: (map['altitude'] ?? map['altura'] ?? 0).toDouble(),
       variety: map['variety'] ?? map['variedad'] ?? '',
       plants: map['plants'] ?? map['matas'] ?? 0,
@@ -41,7 +41,7 @@ class Farm {
   final String name;
   final double hectares;
   final double altitude;
-  final List<FarmPlot> plots;
+  final List<FarmPlot> plots;  
   final String ownerId;
   final DateTime createdAt;
   final String department;
@@ -62,14 +62,27 @@ class Farm {
   });
 
   factory Farm.fromMap(Map<String, dynamic> map) {
+    final List<dynamic> plotsData = map['plots'] as List<dynamic>? ?? [];
+    
     return Farm(
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       hectares: (map['hectares'] ?? 0).toDouble(),
       altitude: (map['altitude'] ?? 0).toDouble(),
-      plots: (map['plots'] as List<dynamic>? ?? [])
-          .map((plot) => FarmPlot.fromMap((plot as Map).cast<String, dynamic>()))
-          .toList(),
+      plots: plotsData.map((plotMap) {
+        // Asegúrate de que plotMap sea un Map<String, dynamic>
+        if (plotMap is Map) {
+          return FarmPlot.fromMap(Map<String, dynamic>.from(plotMap));
+        }
+        // Si no es un Map, retorna un FarmPlot vacío
+        return FarmPlot(
+          name: '',
+          hectares: 0,
+          altitude: 0,
+          variety: '',
+          plants: 0,
+        );
+      }).toList(),
       ownerId: map['ownerId'] ?? '',
       createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       department: map['department'] ?? '',
