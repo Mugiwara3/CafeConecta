@@ -50,13 +50,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const AuthHeader(), // Reutilizado del login
+            const AuthHeader(),
             Padding(
               padding: const EdgeInsets.all(24.0),
-              child: RegisterForm(
-                onSubmit: _submitForm,
-                errorMessage: _errorMessage,
-                isLoading: _isLoading,
+              child: Column(
+                children: [
+                  RegisterForm(
+                    onSubmit: _submitForm,
+                    errorMessage: _errorMessage,
+                    isLoading: _isLoading,
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/login');
+                    },
+                    child: const Text(
+                      '¿Ya tienes cuenta? Inicia sesión',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontSize: 16,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
