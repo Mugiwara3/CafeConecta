@@ -7,6 +7,20 @@ import 'package:miapp_cafeconecta/ui/screens/auth/farm/add_farm_screen.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/farm/widgets/farm_service.dart';
 import 'package:provider/provider.dart';
 
+class HomeOption {
+  final String title;
+  final IconData icon;
+  final String route;
+
+  HomeOption(this.title, this.icon, this.route);
+}
+
+final List<HomeOption> homeOptions = [
+  HomeOption("Registrar Kilos", Icons.fitness_center, "/registrar_kilos"),
+  HomeOption("Registrar Ventas", Icons.attach_money, "/registrar_ventas"),
+  HomeOption("Cerrar Sesión", Icons.logout, "/cerrar_sesion"),
+];
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -130,6 +144,14 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _navigateToRoute(String route) {
+    if (route == "/cerrar_sesion") {
+      _cerrarSesion();
+    } else {
+      Navigator.pushNamed(context, route);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,9 +159,25 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text("Mis Fincas"),
         backgroundColor: Colors.brown[700],
         actions: [
-          IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: _cerrarSesion,
+          PopupMenuButton<HomeOption>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (HomeOption option) {
+              _navigateToRoute(option.route);
+            },
+            itemBuilder: (BuildContext context) {
+              return homeOptions.map((HomeOption option) {
+                return PopupMenuItem<HomeOption>(
+                  value: option,
+                  child: Row(
+                    children: [
+                      Icon(option.icon, color: Colors.brown[700]),
+                      const SizedBox(width: 10),
+                      Text(option.title),
+                    ],
+                  ),
+                );
+              }).toList();
+            },
           ),
         ],
       ),
