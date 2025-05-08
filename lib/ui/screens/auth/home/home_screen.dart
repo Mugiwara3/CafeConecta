@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:miapp_cafeconecta/controllers/auth_controller.dart';
 import 'package:miapp_cafeconecta/models/farm_model.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/farm/DetalleFincaScreen.dart';
@@ -254,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.park, size: 32, color: Colors.green[700]),
+                                  Icon(Icons.park, size: 32, color: const Color.fromARGB(255, 59, 172, 65)),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Text(
@@ -266,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   IconButton(
-                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    icon: const Icon(Icons.delete, color: Color.fromARGB(255, 227, 38, 25)),
                                     onPressed: () => _eliminarFinca(farm.id),
                                   ),
                                 ],
@@ -278,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   const SizedBox(width: 4),
                                   Text(
                                     "${farm.municipality}, ${farm.department}",
-                                    style: TextStyle(color: Colors.grey[700]),
+                                    style: TextStyle(color: const Color.fromARGB(255, 197, 68, 68)),
                                   ),
                                 ],
                               ),
