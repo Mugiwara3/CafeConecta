@@ -17,7 +17,8 @@ class RegistrarKilosScreen extends StatefulWidget {
 }
 
 class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
-  List<String> trabajadores = [];
+  // Modificamos la estructura para manejar trabajadores por lote
+  Map<String, List<String>> trabajadoresPorLote = {};
   final List<String> dias = [
     "Lunes",
     "Martes",
@@ -72,32 +73,69 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
           fincas = farmsData;
           if (fincas.isNotEmpty && selectedFarmId == null) {
             selectedFarmId = fincas.first.id;
+            // Seleccionar el primer lote por defecto si existe
+            if (fincas.first.plots.isNotEmpty) {
+              selectedLoteId = fincas.first.plots.first.name;
+            }
           }
         });
         _cargarRecolecciones();
-      });
-      
-      // Cargar trabajadores
-      final trabajadoresSnapshot = await FirebaseFirestore.instance
-          .collection('trabajadores')
-          .get();
-          
-      final List<String> trabajadoresList = [];
-      for (var doc in trabajadoresSnapshot.docs) {
-        trabajadoresList.add(doc['nombre']);
-      }
-
-      setState(() {
-        trabajadores = trabajadoresList;
-        
-        // Inicializar expansión de trabajadores
-        for (var trabajador in trabajadores) {
-          expandedTrabajadores[trabajador] = false;
-        }
+        _cargarTrabajadoresPorLote();
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al cargar datos: $e')),
+      );
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  // Nuevo método para cargar trabajadores específicos por lote
+  Future<void> _cargarTrabajadoresPorLote() async {
+    if (selectedFarmId == null) return;
+    
+    setState(() {
+      isLoading = true;
+    });
+    
+    try {
+      // Consultar la colección 'trabajadores_lote' en Firebase
+      final snapshot = await FirebaseFirestore.instance
+          .collection('trabajadores_lote')
+          .where('farmId', isEqualTo: selectedFarmId)
+          .get();
+      
+      Map<String, List<String>> tempTrabajadoresPorLote = {};
+      
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final loteId = data['loteId'] as String;
+        final nombreTrabajador = data['nombre'] as String;
+        
+        if (!tempTrabajadoresPorLote.containsKey(loteId)) {
+          tempTrabajadoresPorLote[loteId] = [];
+        }
+        
+        tempTrabajadoresPorLote[loteId]!.add(nombreTrabajador);
+      }
+      
+      setState(() {
+        trabajadoresPorLote = tempTrabajadoresPorLote;
+        
+        // Inicializar expansión de trabajadores para todos los lotes
+        for (var loteId in trabajadoresPorLote.keys) {
+          for (var trabajador in trabajadoresPorLote[loteId]!) {
+            expandedTrabajadores['$loteId:$trabajador'] = false;
+          }
+        }
+        
+        isLoading = false;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar trabajadores: $e')),
       );
       setState(() {
         isLoading = false;
@@ -150,12 +188,23 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     }
   }
 
-  // Método para guardar un trabajador en Firebase
-  Future<void> _guardarTrabajador(String nombre) async {
+  // Método modificado para guardar un trabajador en Firebase asociado a un lote
+  Future<void> _guardarTrabajador(String nombre, String loteId) async {
     try {
-      await FirebaseFirestore.instance.collection('trabajadores').add({
+      await FirebaseFirestore.instance.collection('trabajadores_lote').add({
         'nombre': nombre,
+        'loteId': loteId,
+        'farmId': selectedFarmId,
         'timestamp': FieldValue.serverTimestamp(),
+      });
+      
+      // Actualizar la lista local
+      setState(() {
+        if (!trabajadoresPorLote.containsKey(loteId)) {
+          trabajadoresPorLote[loteId] = [];
+        }
+        trabajadoresPorLote[loteId]!.add(nombre);
+        expandedTrabajadores['$loteId:$nombre'] = false;
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -164,16 +213,44 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     }
   }
 
-  // Método para eliminar un trabajador de Firebase
-  Future<void> _eliminarTrabajadorFirebase(String nombre) async {
+  // Método modificado para eliminar un trabajador de Firebase asociado a un lote
+  Future<void> _eliminarTrabajador(String nombre, String loteId) async {
     try {
       final querySnapshot = await FirebaseFirestore.instance
-          .collection('trabajadores')
+          .collection('trabajadores_lote')
           .where('nombre', isEqualTo: nombre)
+          .where('loteId', isEqualTo: loteId)
+          .where('farmId', isEqualTo: selectedFarmId)
           .get();
           
       for (var doc in querySnapshot.docs) {
         await doc.reference.delete();
+      }
+      
+      // Actualizar la lista local
+      setState(() {
+        trabajadoresPorLote[loteId]?.remove(nombre);
+        expandedTrabajadores.remove('$loteId:$nombre');
+      });
+      
+      // Actualizar recolecciones afectadas
+      for (int i = 0; i < recolecciones.length; i++) {
+        if (recolecciones[i].loteId == loteId) {
+          final dataActualizado = Map<String, dynamic>.from(recolecciones[i].data);
+          dataActualizado.remove(nombre);
+          
+          final recoleccionActualizada = Recoleccion(
+            id: recolecciones[i].id,
+            farmId: recolecciones[i].farmId,
+            loteId: recolecciones[i].loteId,
+            fecha: recolecciones[i].fecha,
+            data: dataActualizado,
+            timestamp: recolecciones[i].timestamp,
+          );
+          
+          recolecciones[i] = recoleccionActualizada;
+          _guardarRecoleccion(recoleccionActualizada);
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -225,45 +302,91 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     );
   }
 
+  // Método modificado para agregar trabajador a un lote específico
   void _agregarTrabajador() {
+    if (selectedFarmId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Seleccione una finca primero')),
+      );
+      return;
+    }
+    
+    // Encontrar la finca seleccionada
+    final selectedFarm = fincas.firstWhere((farm) => farm.id == selectedFarmId);
+    
     String nombre = '';
+    String loteId = '';
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Agregar trabajador'),
-        content: TextField(
-          autofocus: true,
-          onChanged: (value) => nombre = value,
-          decoration: const InputDecoration(labelText: 'Nombre del trabajador'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              autofocus: true,
+              onChanged: (value) => nombre = value,
+              decoration: const InputDecoration(labelText: 'Nombre del trabajador'),
+            ),
+            const SizedBox(height: 15),
+            DropdownButtonFormField<String>(
+              decoration: const InputDecoration(labelText: 'Seleccione un lote'),
+              items: selectedFarm.plots.map((plot) {
+                return DropdownMenuItem<String>(
+                  value: plot.name,
+                  child: Text(plot.name),
+                );
+              }).toList(),
+              onChanged: (value) {
+                loteId = value ?? '';
+              },
+            ),
+          ],
         ),
         actions: [
           TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
             onPressed: () {
-              if (nombre.isNotEmpty && !trabajadores.contains(nombre)) {
-                setState(() {
-                  trabajadores.add(nombre);
-                  expandedTrabajadores[nombre] = false;
+              if (nombre.isNotEmpty && loteId.isNotEmpty) {
+                // Verificar si el trabajador ya existe en este lote
+                bool trabajadorExiste = trabajadoresPorLote[loteId]?.contains(nombre) ?? false;
+                
+                if (!trabajadorExiste) {
+                  _guardarTrabajador(nombre, loteId);
                   
-                  // Actualiza todas las recolecciones existentes con este trabajador
+                  // Actualizar las recolecciones existentes para este lote
                   for (var recoleccion in recolecciones) {
-                    final dataActualizado = Map<String, dynamic>.from(recoleccion.data);
-                    dataActualizado[nombre] = {
-                      for (var d in dias) d: {'D': '', 'T': ''}
-                    };
-                    
-                    final recoleccionActualizada = Recoleccion(
-                      id: recoleccion.id,
-                      farmId: recoleccion.farmId,
-                      loteId: recoleccion.loteId,
-                      fecha: recoleccion.fecha,
-                      data: dataActualizado,
-                      timestamp: recoleccion.timestamp,
-                    );
-                    
-                    _guardarRecoleccion(recoleccionActualizada);
+                    if (recoleccion.loteId == loteId) {
+                      final dataActualizado = Map<String, dynamic>.from(recoleccion.data);
+                      dataActualizado[nombre] = {
+                        for (var d in dias) d: {'D': '', 'T': ''}
+                      };
+                      
+                      final recoleccionActualizada = Recoleccion(
+                        id: recoleccion.id,
+                        farmId: recoleccion.farmId,
+                        loteId: recoleccion.loteId,
+                        fecha: recoleccion.fecha,
+                        data: dataActualizado,
+                        timestamp: recoleccion.timestamp,
+                      );
+                      
+                      _guardarRecoleccion(recoleccionActualizada);
+                    }
                   }
-                });
-                _guardarTrabajador(nombre);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('El trabajador ya existe en este lote')),
+                  );
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Complete todos los campos')),
+                );
               }
               Navigator.pop(context);
             },
@@ -274,45 +397,79 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     );
   }
 
-  void _eliminarTrabajador() {
+// Método modificado para eliminar trabajador de un lote específico
+  void _mostrarDialogoEliminarTrabajador() {
+    if (selectedFarmId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Seleccione una finca primero')),
+      );
+      return;
+    }
+    
+    // Encontrar la finca seleccionada
+    final selectedFarm = fincas.firstWhere((farm) => farm.id == selectedFarmId);
+    
+    String loteId = '';
+    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar trabajador'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: trabajadores
-              .map((nombre) => ListTile(
-                    title: Text(nombre),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () {
-                        setState(() {
-                          trabajadores.remove(nombre);
-                          expandedTrabajadores.remove(nombre);
-                          for (var i = 0; i < recolecciones.length; i++) {
-                            final dataActualizado = Map<String, dynamic>.from(recolecciones[i].data);
-                            dataActualizado.remove(nombre);
-                            
-                            final recoleccionActualizada = Recoleccion(
-                              id: recolecciones[i].id,
-                              farmId: recolecciones[i].farmId,
-                              loteId: recolecciones[i].loteId,
-                              fecha: recolecciones[i].fecha,
-                              data: dataActualizado,
-                              timestamp: recolecciones[i].timestamp,
-                            );
-                            
-                            recolecciones[i] = recoleccionActualizada;
-                            _guardarRecoleccion(recoleccionActualizada);
-                          }
-                        });
-                        _eliminarTrabajadorFirebase(nombre);
-                        Navigator.pop(context);
-                      },
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Eliminar trabajador'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(labelText: 'Seleccione un lote'),
+                  items: selectedFarm.plots.map((plot) {
+                    return DropdownMenuItem<String>(
+                      value: plot.name,
+                      child: Text(plot.name),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      loteId = value ?? '';
+                    });
+                  },
+                ),
+                const SizedBox(height: 10),
+                if (loteId.isNotEmpty)
+                  Container(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.3,
                     ),
-                  ))
-              .toList(),
+                    child: trabajadoresPorLote[loteId]?.isEmpty ?? true
+                        ? const Center(child: Text('No hay trabajadores en este lote'))
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: trabajadoresPorLote[loteId]?.length ?? 0,
+                            itemBuilder: (context, index) {
+                              final nombre = trabajadoresPorLote[loteId]![index];
+                              return ListTile(
+                                title: Text(nombre),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () {
+                                    _eliminarTrabajador(nombre, loteId);
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cerrar'),
+            ),
+          ],
         ),
       ),
     );
@@ -380,8 +537,11 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
           TextButton(
             onPressed: () {
               if (loteId.isNotEmpty && fecha.isNotEmpty) {
+                // Usar solo los trabajadores asociados a este lote
+                final trabajadoresLote = trabajadoresPorLote[loteId] ?? [];
+                
                 final data = {
-                  for (var t in trabajadores)
+                  for (var t in trabajadoresLote)
                     t: {
                       for (var d in dias) d: {'D': '', 'T': ''}
                     }
@@ -432,9 +592,12 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     return total.toStringAsFixed(1);
   }
 
-  double calcularTotalGeneral(Map<String, dynamic> data) {
+  double calcularTotalGeneral(Map<String, dynamic> data, String loteId) {
     double total = 0;
-    for (var trabajador in trabajadores) {
+    // Obtener solo los trabajadores de este lote
+    final trabajadoresLote = trabajadoresPorLote[loteId] ?? [];
+    
+    for (var trabajador in trabajadoresLote) {
       final datosTrabajador = data[trabajador];
       if (datosTrabajador != null) {
         for (var dia in dias) {
@@ -485,12 +648,14 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     });
   }
 
-  // Filtrar trabajadores según la búsqueda
-  List<String> filtrarTrabajadores() {
+  // Filtrar trabajadores según la búsqueda y el lote seleccionado
+  List<String> filtrarTrabajadores(String loteId) {
+    final trabajadoresLote = trabajadoresPorLote[loteId] ?? [];
+    
     if (searchQuery.isEmpty) {
-      return trabajadores;
+      return trabajadoresLote;
     }
-    return trabajadores
+    return trabajadoresLote
         .where((t) => t.toLowerCase().contains(searchQuery.toLowerCase()))
         .toList();
   }
@@ -582,8 +747,8 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
   }
 
   // Widget para cada trabajador con formato acordeón
-  Widget _buildTrabajadorWidget(int recoleccionIndex, String trabajador, Map<String, dynamic>? datosTrabajador) {
-    final isExpanded = expandedTrabajadores[trabajador] ?? false;
+  Widget _buildTrabajadorWidget(int recoleccionIndex, String trabajador, Map<String, dynamic>? datosTrabajador, String loteId) {
+    final isExpanded = expandedTrabajadores['$loteId:$trabajador'] ?? false;
     
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -604,7 +769,7 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
             ),
             onTap: () {
               setState(() {
-                expandedTrabajadores[trabajador] = !isExpanded;
+                expandedTrabajadores['$loteId:$trabajador'] = !isExpanded;
               });
             },
           ),
@@ -628,7 +793,7 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
   // Widget para cada recolección con formato de panel expansible
   Widget _buildRecoleccionPanel(int index, Recoleccion recoleccion) {
     final isExpanded = expandedPanels[index] ?? false;
-    final totalGeneral = calcularTotalGeneral(recoleccion.data);
+    final totalGeneral = calcularTotalGeneral(recoleccion.data, recoleccion.loteId);
     
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -651,11 +816,12 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                children: filtrarTrabajadores().map((trabajador) {
+                children: filtrarTrabajadores(recoleccion.loteId).map((trabajador) {
                   return _buildTrabajadorWidget(
                     index,
                     trabajador,
                     recoleccion.data[trabajador],
+                    recoleccion.loteId,
                   );
                 }).toList(),
               ),
@@ -678,7 +844,7 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.person_remove),
-            onPressed: _eliminarTrabajador,
+            onPressed: _mostrarDialogoEliminarTrabajador,
             tooltip: 'Eliminar trabajador',
           ),
         ],
@@ -713,6 +879,7 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
                           selectedFarmId = value;
                         });
                         _cargarRecolecciones();
+                        _cargarTrabajadoresPorLote();
                       },
                     ),
                   ),
