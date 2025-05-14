@@ -1,5 +1,6 @@
-/*import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:miapp_cafeconecta/ui/screens/auth/home/chat/CafePrompt.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/login/widgets/app_bar/custom_app_bar.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -15,10 +16,11 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<ChatMessage> _messages = [];
   bool _isTyping = false;
 
-  // TODO: Reemplazar con tu API Key de Gemini
-  final String apiKey = 'TU_API_KEY_AQUI';
-  late GenerativeModel _model;
-  late ChatSession _chat;
+  final String apiKey = 'AIzaSyCBzJEPxy9yc6ksSb_LAa0CEj26dJ3-UpE';
+  GenerativeModel? _model;
+  ChatSession? _chat;
+  bool _isInitialized = false;
+  String? _initError;
 
   @override
   void initState() {
@@ -28,28 +30,65 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _initializeGemini() {
     try {
+      if (apiKey == 'AIzaSyCBzJEPxy9yc6ksSb_LAa0CEj26dJ3-UpE') {
+        setState(() {
+          _initError = 'Configura tu API Key de Gemini en la constante apiKey';
+          _isInitialized = false;
+        });
+        return;
+      }
+
       _model = GenerativeModel(
         model: 'gemini-pro',
         apiKey: apiKey,
       );
-      _chat = _model.startChat();
       
-      // Mensaje inicial de bienvenida
-      setState(() {
-        _messages.add(
-          ChatMessage(
-            text: '¡Hola! Soy tu asistente virtual de CafeConecta. ¿En qué puedo ayudarte con tu cultivo de café hoy?',
-            isUser: false,
-          ),
-        );
+      // Inicializamos la sesión con el prompt especializado
+      CafeCultivationPrompt.configureChat(_model!).then((configuredChat) {
+        if (mounted) {
+          setState(() {
+            _chat = configuredChat;
+            _isInitialized = true;
+            // Mensaje inicial de bienvenida
+            _messages.add(
+              ChatMessage(
+                text: '¡Hola! Soy tu asistente virtual de CafeConecta. ¿En qué puedo ayudarte con tu cultivo de café hoy?',
+                isUser: false,
+              ),
+            );
+          });
+        }
+      }).catchError((e) {
+        debugPrint('Error al configurar el prompt: $e');
+        // Si falla la configuración del prompt, continuamos con una sesión normal
+        if (mounted) {
+          setState(() {
+            _chat = _model!.startChat();
+            _isInitialized = true;
+            _messages.add(
+              ChatMessage(
+                text: '¡Hola! Soy tu asistente virtual de CafeConecta. ¿En qué puedo ayudarte hoy?',
+                isUser: false,
+              ),
+            );
+          });
+        }
       });
     } catch (e) {
-      print('Error al inicializar Gemini: $e');
+      debugPrint('Error al inicializar Gemini: $e');
+      setState(() {
+        _initError = 'Error al inicializar Gemini: $e';
+        _isInitialized = false;
+      });
     }
   }
 
   Future<void> _sendMessage(String text) async {
     if (text.trim().isEmpty) return;
+    if (!_isInitialized || _chat == null) {
+      _showErrorSnackbar('El chat no está inicializado correctamente');
+      return;
+    }
 
     setState(() {
       _messages.add(ChatMessage(text: text, isUser: true));
@@ -60,27 +99,41 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
 
     try {
-      final response = await _chat.sendMessage(Content.text(text));
+      final response = await _chat!.sendMessage(Content.text(text));
       final responseText = response.text ?? 'No se pudo obtener una respuesta.';
       
-      setState(() {
-        _messages.add(ChatMessage(text: responseText, isUser: false));
-        _isTyping = false;
-      });
-      
-      _scrollToBottom();
+      if (mounted) {
+        setState(() {
+          _messages.add(ChatMessage(text: responseText, isUser: false));
+          _isTyping = false;
+        });
+        
+        _scrollToBottom();
+      }
     } catch (e) {
-      setState(() {
-        _isTyping = false;
-        _messages.add(ChatMessage(
-          text: 'Ocurrió un error al procesar tu solicitud: $e',
-          isUser: false,
-          isError: true,
-        ));
-      });
-      
-      _scrollToBottom();
+      if (mounted) {
+        setState(() {
+          _isTyping = false;
+          _messages.add(ChatMessage(
+            text: 'Ocurrió un error al procesar tu solicitud: $e',
+            isUser: false,
+            isError: true,
+          ));
+        });
+        
+        _scrollToBottom();
+      }
     }
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 5),
+      ),
+    );
   }
 
   void _scrollToBottom() {
@@ -109,9 +162,11 @@ class _ChatScreenState extends State<ChatScreen> {
       body: Column(
         children: [
           Expanded(
-            child: _messages.isEmpty
-                ? _buildEmptyChat()
-                : _buildChatMessages(),
+            child: _initError != null
+                ? _buildErrorMessage()
+                : _messages.isEmpty
+                    ? _buildEmptyChat()
+                    : _buildChatMessages(),
           ),
           if (_isTyping)
             const Padding(
@@ -143,6 +198,46 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Widget _buildErrorMessage() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
+            const SizedBox(height: 16),
+            Text(
+              'Error de configuración',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.red[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _initError ?? 'Error desconocido',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _initializeGemini,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.brown,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Reintentar'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyChat() {
     return Center(
       child: Column(
@@ -170,8 +265,34 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 24),
+          _buildSuggestionChips(),
         ],
       ),
+    );
+  }
+  
+  Widget _buildSuggestionChips() {
+    final suggestions = [
+      "¿Cómo controlar la broca?",
+      "Mejores variedades para mi región",
+      "Técnicas de fertilización orgánica",
+      "¿Cómo enfrentar el cambio climático?",
+    ];
+    
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 8,
+      children: suggestions.map((suggestion) {
+        return ActionChip(
+          backgroundColor: Colors.brown[100],
+          label: Text(suggestion),
+          onPressed: () {
+            _messageController.text = suggestion;
+            _sendMessage(suggestion);
+          },
+        );
+      }).toList(),
     );
   }
 
@@ -246,6 +367,7 @@ class _ChatScreenState extends State<ChatScreen> {
             child: TextField(
               controller: _messageController,
               textCapitalization: TextCapitalization.sentences,
+              enabled: _isInitialized && !_isTyping,
               decoration: InputDecoration(
                 hintText: 'Escribe tu pregunta...',
                 border: OutlineInputBorder(
@@ -253,29 +375,37 @@ class _ChatScreenState extends State<ChatScreen> {
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: Colors.brown[50],
+                fillColor: (_isInitialized && !_isTyping) 
+                    ? Colors.brown[50]
+                    : Colors.grey[200],
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 10,
                 ),
               ),
-              onSubmitted: _isTyping ? null : _sendMessage,
+              onSubmitted: (_isInitialized && !_isTyping) 
+                  ? _sendMessage 
+                  : null,
             ),
           ),
           const SizedBox(width: 8),
           Material(
-            color: Colors.brown,
+            color: (_isInitialized && !_isTyping) 
+                ? Colors.brown
+                : Colors.grey,
             borderRadius: BorderRadius.circular(24),
             child: InkWell(
               borderRadius: BorderRadius.circular(24),
-              onTap: _isTyping
-                  ? null
-                  : () => _sendMessage(_messageController.text),
+              onTap: (_isInitialized && !_isTyping)
+                  ? () => _sendMessage(_messageController.text)
+                  : null,
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Icon(
                   Icons.send,
-                  color: _isTyping ? Colors.brown[300] : Colors.white,
+                  color: (_isInitialized && !_isTyping) 
+                      ? Colors.white 
+                      : Colors.grey[300],
                 ),
               ),
             ),
@@ -296,4 +426,4 @@ class ChatMessage {
     required this.isUser,
     this.isError = false,
   });
-}*/
+}

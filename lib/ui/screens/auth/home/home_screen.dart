@@ -49,17 +49,13 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final authController = Provider.of<AuthController>(context);
     final user = authController.currentUser;
-    
+
     if (user == null) {
       // Si no hay usuario autenticado, redirigimos al login
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).pushReplacementNamed('/login');
       });
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -76,7 +72,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   value: option,
                   child: Row(
                     children: [
-                      Icon(option.icon, color: option.route == "/cerrar_sesion" ? Colors.red : Colors.brown[700]),
+                      Icon(
+                        option.icon,
+                        color:
+                            option.route == "/cerrar_sesion"
+                                ? Colors.red
+                                : Colors.brown[700],
+                      ),
                       const SizedBox(width: 10),
                       Text(option.title),
                     ],
@@ -93,9 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
           if (_isLoading)
             Container(
               color: Colors.black.withOpacity(0.3),
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: const Center(child: CircularProgressIndicator()),
             ),
         ],
       ),
@@ -116,10 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const Text(
                 "Mis fincas",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               IconButton(
                 icon: const Icon(Icons.refresh),
@@ -128,9 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-        Expanded(
-          child: _buildFarmsList(userId),
-        ),
+        Expanded(child: _buildFarmsList(userId)),
       ],
     );
   }
@@ -146,12 +141,15 @@ class _HomeScreenState extends State<HomeScreen> {
         break;
       case "/registrar_ventas":
         // Implementar navegación a ventas cuando exista
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Función en desarrollo")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Función en desarrollo")));
         break;
       case "/cerrar_sesion":
-        final authController = Provider.of<AuthController>(context, listen: false);
+        final authController = Provider.of<AuthController>(
+          context,
+          listen: false,
+        );
         _showLogoutConfirmation(context, authController);
         break;
       default:
@@ -236,20 +234,20 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildAddFarmButton({bool mini = false}) {
     return mini
         ? FloatingActionButton.small(
-            backgroundColor: Colors.red,
-            onPressed: _navigateToAddFarm,
-            child: const Icon(Icons.add, color: Colors.white),
-          )
+          backgroundColor: Colors.red,
+          onPressed: _navigateToAddFarm,
+          child: const Icon(Icons.add, color: Colors.white),
+        )
         : FloatingActionButton.extended(
-            backgroundColor: Colors.red,
-            heroTag: "addFarmButton",
-            icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text(
-              "Agregar Finca",
-              style: TextStyle(color: Colors.white),
-            ),
-            onPressed: _navigateToAddFarm,
-          );
+          backgroundColor: Colors.red,
+          heroTag: "addFarmButton",
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: const Text(
+            "Agregar Finca",
+            style: TextStyle(color: Colors.white),
+          ),
+          onPressed: _navigateToAddFarm,
+        );
   }
 
   BottomNavigationBar _buildBottomNavBar() {
@@ -273,6 +271,8 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() => _selectedIndex = index);
     // Implementar navegación según el índice
     switch (index) {
+      case 0:
+        break;
       case 1:
         // Navegar a cursos
         ScaffoldMessenger.of(context).showSnackBar(
@@ -289,7 +289,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Mostrar diálogo de confirmación para cerrar sesión
-  Future<void> _showLogoutConfirmation(BuildContext context, AuthController authController) async {
+  Future<void> _showLogoutConfirmation(
+    BuildContext context,
+    AuthController authController,
+  ) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -322,12 +325,12 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _isLoading = true;
     });
-    
+
     try {
       await authController.signOut();
-      
+
       if (!mounted) return;
-      
+
       // Navegar a la pantalla de login y eliminar el historial de navegación
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -336,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       debugPrint('Error al cerrar sesión: $e');
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error al cerrar sesión: ${e.toString()}'),
@@ -361,12 +364,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (result != null && result is Farm) {
         setState(() => _isLoading = true);
-        
+
         try {
           // Intentar guardar la finca
           final farmId = await _farmController.addFarm(result);
           debugPrint("Finca guardada con ID: $farmId");
-          
+
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -409,9 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final updatedFarm = await Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => FincaDetalleScreen(farm: farm),
-        ),
+        MaterialPageRoute(builder: (_) => FincaDetalleScreen(farm: farm)),
       );
 
       if (updatedFarm != null && updatedFarm is Farm && mounted) {
