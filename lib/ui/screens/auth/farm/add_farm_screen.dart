@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:miapp_cafeconecta/controllers/auth_controller.dart';
+import 'package:miapp_cafeconecta/ui/screens/auth/farm/widgets/colombia_data.dart'; // Importar datos de Colombia
 import 'package:miapp_cafeconecta/models/farm_model.dart';
 import 'package:provider/provider.dart';
 
@@ -15,12 +16,27 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
   bool _isLoading = false;
 
   final TextEditingController _nombreController = TextEditingController();
-  final TextEditingController _hectareasTotalesController = TextEditingController();
-  final TextEditingController _hectareasCafeController = TextEditingController();
+  final TextEditingController _hectareasTotalesController =
+      TextEditingController();
+  final TextEditingController _hectareasCafeController =
+      TextEditingController();
   final TextEditingController _alturaController = TextEditingController();
-  final TextEditingController _departamentoController = TextEditingController();
-  final TextEditingController _municipioController = TextEditingController();
   final TextEditingController _veredaController = TextEditingController();
+
+  // Variables para los desplegables
+  String? _departamentoSeleccionado;
+  String? _municipioSeleccionado;
+  List<String> _municipiosDisponibles = [];
+
+  // Función para actualizar los municipios según el departamento seleccionado
+  void _actualizarMunicipios(String? departamento) {
+    if (departamento != null) {
+      setState(() {
+        _municipiosDisponibles = ColombiaData.getMunicipios(departamento);
+        _municipioSeleccionado = null; // Reiniciar la selección del municipio
+      });
+    }
+  }
 
   Future<void> _guardarFinca() async {
     if (_formKey.currentState!.validate()) {
@@ -30,9 +46,12 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
 
       try {
         // Obtener el usuario actual
-        final authController = Provider.of<AuthController>(context, listen: false);
+        final authController = Provider.of<AuthController>(
+          context,
+          listen: false,
+        );
         final user = authController.currentUser;
-        
+
         if (user == null) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -44,7 +63,7 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
           }
           return;
         }
-        
+
         // Crear objeto Farm basado en el modelo
         final farm = Farm(
           id: '', // El ID será asignado por Firestore
@@ -54,14 +73,13 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
           plots: [], // Inicialmente sin lotes
           ownerId: user.uid,
           createdAt: DateTime.now(),
-          department: _departamentoController.text,
-          municipality: _municipioController.text,
+          department: _departamentoSeleccionado ?? '',
+          municipality: _municipioSeleccionado ?? '',
           village: _veredaController.text,
         );
 
         // Devolver el objeto Farm a HomeScreen
         Navigator.pop(context, farm);
-        
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -119,16 +137,13 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
                     icon: Icons.height,
                     keyboardType: TextInputType.number,
                   ),
-                  _buildInputField(
-                    controller: _departamentoController,
-                    label: "Departamento",
-                    icon: Icons.location_city,
-                  ),
-                  _buildInputField(
-                    controller: _municipioController,
-                    label: "Municipio",
-                    icon: Icons.location_on,
-                  ),
+
+                  // Desplegable para Departamento
+                  _buildDepartamentoDropdown(),
+
+                  // Desplegable para Municipio
+                  _buildMunicipioDropdown(),
+
                   _buildInputField(
                     controller: _veredaController,
                     label: "Vereda",
@@ -137,18 +152,25 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
                   const SizedBox(height: 30),
                   ElevatedButton.icon(
                     onPressed: _isLoading ? null : _guardarFinca,
-                    icon: _isLoading 
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                          )
-                        : const Icon(Icons.save),
+                    icon:
+                        _isLoading
+                            ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                            : const Icon(Icons.save),
                     label: Text(_isLoading ? "Guardando..." : "Guardar Finca"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.brown[700],
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 15,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -161,11 +183,97 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
           if (_isLoading)
             Container(
               color: Colors.black.withOpacity(0.3),
-              child: const Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: const Center(child: CircularProgressIndicator()),
             ),
         ],
+      ),
+    );
+  }
+
+  // Widget para el campo de Departamento con desplegable
+  Widget _buildDepartamentoDropdown() {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        child: DropdownButtonFormField<String>(
+          decoration: InputDecoration(
+            icon: Icon(Icons.location_city, color: Colors.brown[400]),
+            labelText: "Departamento",
+            border: InputBorder.none,
+          ),
+          isExpanded: true,
+          value: _departamentoSeleccionado,
+          icon: const Icon(Icons.arrow_drop_down),
+          items:
+              ColombiaData.departamentos.map<DropdownMenuItem<String>>((
+                String value,
+              ) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+          onChanged: (String? newValue) {
+            setState(() {
+              _departamentoSeleccionado = newValue;
+              _actualizarMunicipios(newValue);
+            });
+          },
+          validator:
+              (value) => value == null ? "Seleccione un departamento" : null,
+        ),
+      ),
+    );
+  }
+
+  // Widget para el campo de Municipio con desplegable
+  Widget _buildMunicipioDropdown() {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        child: DropdownButtonFormField<String>(
+          decoration: InputDecoration(
+            icon: Icon(Icons.location_on, color: Colors.brown[400]),
+            labelText: "Municipio",
+            border: InputBorder.none,
+          ),
+          isExpanded: true,
+          value: _municipioSeleccionado,
+          icon: const Icon(Icons.arrow_drop_down),
+          items:
+              _municipiosDisponibles.map<DropdownMenuItem<String>>((
+                String value,
+              ) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+          onChanged:
+              _departamentoSeleccionado == null
+                  ? null
+                  : (String? newValue) {
+                    setState(() {
+                      _municipioSeleccionado = newValue;
+                    });
+                  },
+          validator:
+              (value) =>
+                  _departamentoSeleccionado != null && value == null
+                      ? "Seleccione un municipio"
+                      : null,
+          hint: Text(
+            _departamentoSeleccionado == null
+                ? "Primero seleccione un departamento"
+                : "Seleccione un municipio",
+          ),
+        ),
       ),
     );
   }
@@ -190,9 +298,11 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
             labelText: label,
             border: InputBorder.none,
           ),
-          validator: (value) => value == null || value.isEmpty
-              ? "Este campo es obligatorio"
-              : null,
+          validator:
+              (value) =>
+                  value == null || value.isEmpty
+                      ? "Este campo es obligatorio"
+                      : null,
         ),
       ),
     );

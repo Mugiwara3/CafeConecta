@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/*import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:miapp_cafeconecta/controllers/auth_controller.dart';
 import 'package:miapp_cafeconecta/models/venta_model.dart';
@@ -10,7 +10,7 @@ import 'package:printing/printing.dart';
 import 'package:flutter/services.dart';
 
 class RegistrarVentasScreen extends StatefulWidget {
-  const RegistrarVentasScreen({Key? key}) : super(key: key);
+  const RegistrarVentasScreen({super.key});
 
   @override
   State<RegistrarVentasScreen> createState() => _RegistrarVentasScreenState();
@@ -610,4 +610,4 @@ class _RegistrarVentasScreenState extends State<RegistrarVentasScreen> {
       ),
     );
   }
-}
+}*/

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:miapp_cafeconecta/models/farm_model.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/farm/DetalleFincaScreen.dart';
-import 'package:miapp_cafeconecta/ui/screens/auth/farm/widgets/registrar_kilos.dart';
+import 'package:miapp_cafeconecta/ui/screens/auth/farm/registrarKilos/registrar_kilos.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/home/widgets/app_bar/home_app_bar.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/home/widgets/farm_card.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/home/widgets/price_card.dart';

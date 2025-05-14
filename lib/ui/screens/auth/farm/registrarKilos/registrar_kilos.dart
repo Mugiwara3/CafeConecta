@@ -19,16 +19,7 @@ class RegistrarKilosScreen extends StatefulWidget {
 class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
   // Modificamos la estructura para manejar trabajadores por lote
   Map<String, List<String>> trabajadoresPorLote = {};
-  final List<String> dias = [
-    "Lunes",
-    "Martes",
-    "Miércoles",
-    "Jueves",
-    "Viernes",
-    "Sábado",
-    "Domingo"
-  ];
-
+  
   List<Recoleccion> recolecciones = [];
   List<Farm> fincas = [];
   String? selectedFarmId;
@@ -92,7 +83,7 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     }
   }
 
-  // Nuevo método para cargar trabajadores específicos por lote
+  // Método para cargar trabajadores específicos por lote
   Future<void> _cargarTrabajadoresPorLote() async {
     if (selectedFarmId == null) return;
     
@@ -188,7 +179,7 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     }
   }
 
-  // Método modificado para guardar un trabajador en Firebase asociado a un lote
+  // Método para guardar un trabajador en Firebase asociado a un lote
   Future<void> _guardarTrabajador(String nombre, String loteId) async {
     try {
       await FirebaseFirestore.instance.collection('trabajadores_lote').add({
@@ -213,7 +204,7 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     }
   }
 
-  // Método modificado para eliminar un trabajador de Firebase asociado a un lote
+  // Método para eliminar un trabajador de Firebase asociado a un lote
   Future<void> _eliminarTrabajador(String nombre, String loteId) async {
     try {
       final querySnapshot = await FirebaseFirestore.instance
@@ -302,7 +293,7 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     );
   }
 
-  // Método modificado para agregar trabajador a un lote específico
+  // Método para agregar trabajador a un lote específico
   void _agregarTrabajador() {
     if (selectedFarmId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -362,8 +353,10 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
                   for (var recoleccion in recolecciones) {
                     if (recoleccion.loteId == loteId) {
                       final dataActualizado = Map<String, dynamic>.from(recoleccion.data);
+                      // Ahora solo almacenamos mañana y tarde por trabajador, sin los días
                       dataActualizado[nombre] = {
-                        for (var d in dias) d: {'D': '', 'T': ''}
+                        'manana': '',
+                        'tarde': ''
                       };
                       
                       final recoleccionActualizada = Recoleccion(
@@ -397,7 +390,7 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     );
   }
 
-// Método modificado para eliminar trabajador de un lote específico
+  // Método para eliminar trabajador de un lote específico
   void _mostrarDialogoEliminarTrabajador() {
     if (selectedFarmId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -540,10 +533,12 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
                 // Usar solo los trabajadores asociados a este lote
                 final trabajadoresLote = trabajadoresPorLote[loteId] ?? [];
                 
+                // Nuevo formato de datos simplificado: solo mañana y tarde por trabajador
                 final data = {
                   for (var t in trabajadoresLote)
                     t: {
-                      for (var d in dias) d: {'D': '', 'T': ''}
+                      'manana': '',
+                      'tarde': ''
                     }
                 };
                 
@@ -576,22 +571,19 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     );
   }
 
+  // Calcular total para un trabajador
   String _calcularTotal(Map<String, dynamic> datosTrabajador) {
     double total = 0;
-    for (var dia in dias) {
-      if (datosTrabajador.containsKey(dia)) {
-        final diaData = datosTrabajador[dia];
-        if (diaData != null) {
-          final d = double.tryParse(diaData['D'] ?? '');
-          final t = double.tryParse(diaData['T'] ?? '');
-          if (d != null) total += d;
-          if (t != null) total += t;
-        }
-      }
-    }
+    
+    // Ahora simplemente sumamos mañana y tarde
+    final manana = double.tryParse(datosTrabajador['manana'] ?? '') ?? 0;
+    final tarde = double.tryParse(datosTrabajador['tarde'] ?? '') ?? 0;
+    total = manana + tarde;
+    
     return total.toStringAsFixed(1);
   }
 
+  // Calcular total general para todos los trabajadores
   double calcularTotalGeneral(Map<String, dynamic> data, String loteId) {
     double total = 0;
     // Obtener solo los trabajadores de este lote
@@ -600,34 +592,27 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     for (var trabajador in trabajadoresLote) {
       final datosTrabajador = data[trabajador];
       if (datosTrabajador != null) {
-        for (var dia in dias) {
-          final diaData = datosTrabajador[dia];
-          if (diaData != null) {
-            final d = double.tryParse(diaData['D'] ?? '');
-            final t = double.tryParse(diaData['T'] ?? '');
-            if (d != null) total += d;
-            if (t != null) total += t;
-          }
-        }
+        final manana = double.tryParse(datosTrabajador['manana'] ?? '') ?? 0;
+        final tarde = double.tryParse(datosTrabajador['tarde'] ?? '') ?? 0;
+        total += manana + tarde;
       }
     }
     return total;
   }
 
-  // Función para actualizar los valores en Firebase después de cambios
-  void _actualizarValor(int recoleccionIndex, String trabajador, String dia, String campo, String valor) {
+  // Función para actualizar los valores en Firebase
+  void _actualizarValor(int recoleccionIndex, String trabajador, String campo, String valor) {
     final recoleccion = recolecciones[recoleccionIndex];
     final dataActualizado = Map<String, dynamic>.from(recoleccion.data);
     
     if (!dataActualizado.containsKey(trabajador)) {
-      dataActualizado[trabajador] = {};
+      dataActualizado[trabajador] = {
+        'manana': '',
+        'tarde': ''
+      };
     }
     
-    if (!dataActualizado[trabajador].containsKey(dia)) {
-      dataActualizado[trabajador][dia] = {};
-    }
-    
-    dataActualizado[trabajador][dia][campo] = valor;
+    dataActualizado[trabajador][campo] = valor;
     
     final recoleccionActualizada = Recoleccion(
       id: recoleccion.id,
@@ -660,7 +645,7 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
         .toList();
   }
 
-  // Widget para crear un campo de entrada numérico con validación y formateo adecuados
+  // Widget para crear un campo de entrada numérico
   Widget _buildInputField(
     String initialValue, 
     Function(String) onChanged,
@@ -687,68 +672,13 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     );
   }
 
-  // Widget para mostrar los datos de un día específico
-  Widget _buildDiaCard(
-    int recoleccionIndex,
-    String trabajador, 
-    String dia, 
-    Map<String, dynamic>? diaData
-  ) {
-    final dValue = diaData?['D'] ?? '';
-    final tValue = diaData?['T'] ?? '';
-    
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              dia,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Expanded(
-                  flex: 2,
-                  child: Text('Mañana:'),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: _buildInputField(
-                    dValue,
-                    (value) => _actualizarValor(recoleccionIndex, trabajador, dia, 'D', value),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Expanded(
-                  flex: 2,
-                  child: Text('Tarde:'),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: _buildInputField(
-                    tValue,
-                    (value) => _actualizarValor(recoleccionIndex, trabajador, dia, 'T', value),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // Widget para cada trabajador con formato acordeón
   Widget _buildTrabajadorWidget(int recoleccionIndex, String trabajador, Map<String, dynamic>? datosTrabajador, String loteId) {
     final isExpanded = expandedTrabajadores['$loteId:$trabajador'] ?? false;
+    
+    // Valores por defecto si no existen
+    final mananaValue = datosTrabajador?['manana'] ?? '';
+    final tardeValue = datosTrabajador?['tarde'] ?? '';
     
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
@@ -774,15 +704,46 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
             },
           ),
           
-          // Panel expandible con los días
+          // Panel expandible con los campos simplificados
           if (isExpanded)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.all(16.0),
               child: Column(
-                children: dias.map((dia) {
-                  final diaData = datosTrabajador?[dia];
-                  return _buildDiaCard(recoleccionIndex, trabajador, dia, diaData);
-                }).toList(),
+                children: [
+                  // Campo para mañana
+                  Row(
+                    children: [
+                      const Expanded(
+                        flex: 2,
+                        child: Text('Mañana:'),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: _buildInputField(
+                          mananaValue,
+                          (value) => _actualizarValor(recoleccionIndex, trabajador, 'manana', value),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Campo para tarde
+                  Row(
+                    children: [
+                      const Expanded(
+                        flex: 2,
+                        child: Text('Tarde:'),
+                      ),
+                      Expanded(
+                        flex: 3,
+                        child: _buildInputField(
+                          tardeValue,
+                          (value) => _actualizarValor(recoleccionIndex, trabajador, 'tarde', value),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
         ],
@@ -795,13 +756,17 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     final isExpanded = expandedPanels[index] ?? false;
     final totalGeneral = calcularTotalGeneral(recoleccion.data, recoleccion.loteId);
     
+    // Obtener el nombre del día de la semana en español
+    final fecha = DateFormat('yyyy-MM-dd').parse(recoleccion.fecha);
+    final diaSemana = DateFormat('EEEE', 'es_ES').format(fecha).capitalize();
+    
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         children: [
           // Encabezado del panel
           ListTile(
-            title: Text('${recoleccion.loteId} - ${recoleccion.fecha}'),
+            title: Text('${recoleccion.loteId} - ${recoleccion.fecha} ($diaSemana)'),
             subtitle: Text('Total recolectado: ${totalGeneral.toStringAsFixed(1)} kg'),
             trailing: Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
             onTap: () {
@@ -831,7 +796,7 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
     );
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -851,73 +816,89 @@ class _RegistrarKilosScreenState extends State<RegistrarKilosScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _recolectarCafe,
-        child: const Icon(Icons.add),
         tooltip: 'Nueva recolección',
+        child: const Icon(Icons.add),
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Selector de finca
-                if (fincas.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: 'Seleccione una finca',
-                        border: OutlineInputBorder(),
-                      ),
-                      value: selectedFarmId,
-                      items: fincas.map((farm) {
-                        return DropdownMenuItem<String>(
-                          value: farm.id,
-                          child: Text(farm.name),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedFarmId = value;
-                        });
-                        _cargarRecolecciones();
-                        _cargarTrabajadoresPorLote();
-                      },
-                    ),
-                  ),
-                
-                // Barra de búsqueda
+      body: isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : Column(
+            children: [
+              // Selector de finca
+              if (fincas.isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: TextField(
-                    controller: searchController,
+                  padding: const EdgeInsets.all(16.0),
+                  child: DropdownButtonFormField<String>(
                     decoration: const InputDecoration(
-                      labelText: 'Buscar trabajador',
-                      prefixIcon: Icon(Icons.search),
+                      labelText: 'Seleccione una finca',
                       border: OutlineInputBorder(),
                     ),
+                    value: selectedFarmId,
+                    items: fincas.map((farm) {
+                      return DropdownMenuItem<String>(
+                        value: farm.id,
+                        child: Text(farm.name),
+                      );
+                    }).toList(),
                     onChanged: (value) {
                       setState(() {
-                        searchQuery = value;
+                        selectedFarmId = value;
+                        // Si cambia la finca, actualizar el lote seleccionado
+                        final farm = fincas.firstWhere((f) => f.id == value);
+                        if (farm.plots.isNotEmpty) {
+                          selectedLoteId = farm.plots.first.name;
+                        } else {
+                          selectedLoteId = null;
+                        }
                       });
+                      _cargarRecolecciones();
+                      _cargarTrabajadoresPorLote();
                     },
                   ),
                 ),
-                
-                // Lista de recolecciones
-                Expanded(
-                  child: recolecciones.isEmpty
-                      ? const Center(
-                          child: Text('No hay recolecciones registradas'),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16.0),
-                          itemCount: recolecciones.length,
-                          itemBuilder: (context, index) {
-                            return _buildRecoleccionPanel(index, recolecciones[index]);
-                          },
-                        ),
+              
+              // Barra de búsqueda
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: TextField(
+                  controller: searchController,
+                  decoration: const InputDecoration(
+                    labelText: 'Buscar trabajador',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      searchQuery = value;
+                    });
+                  },
                 ),
-              ],
-            ),
+              ),
+              
+              const SizedBox(height: 10),
+              
+              // Lista de recolecciones
+              Expanded(
+                child: recolecciones.isEmpty
+                  ? const Center(
+                      child: Text('No hay recolecciones registradas'),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16.0),
+                      itemCount: recolecciones.length,
+                      itemBuilder: (context, index) {
+                        return _buildRecoleccionPanel(index, recolecciones[index]);
+                      },
+                    ),
+              ),
+            ],
+          ),
     );
+  }
+}
+
+// Extensión para capitalizar la primera letra
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }
