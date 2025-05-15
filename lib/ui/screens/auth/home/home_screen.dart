@@ -281,9 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
         break;
       case 2:
         // Navegar a chat IA
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Sección de ChatIA en desarrollo")),
-        );
+        Navigator.pushNamed(context, '/chat');
         break;
     }
   }

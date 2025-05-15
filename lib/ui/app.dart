@@ -4,7 +4,6 @@ import 'package:miapp_cafeconecta/ui/screens/auth/home/chat/Chat_screen.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/register/register_screen.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/home/home_screen.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/login/login_screen.dart';
-
 import 'package:provider/provider.dart';
 
 class MyApp extends StatelessWidget {
@@ -40,7 +39,7 @@ class MyApp extends StatelessWidget {
           '/login': (context) => const LoginScreen(),
           '/home': (context) => const HomeScreen(),
           '/register': (context) => const RegisterScreen(),
-          '/chat': (context) => const ChatScreen(), // Añadimos la ruta al chat
+          '/chat': (context) => const ChatScreen(),
         },
         initialRoute: '/login',
       ),

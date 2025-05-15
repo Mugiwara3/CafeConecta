@@ -28,9 +28,10 @@ class CafeCultivationPrompt {
     5. Cuando sea relevante, menciona los beneficios económicos de las prácticas recomendadas
     6. Si una consulta está fuera de tu ámbito, indícalo y sugiere fuentes confiables
     7. Estructura tus respuestas de manera clara y concisa
+    8. SIEMPRE responde en español, sin importar el idioma en que te pregunten
     
     INFORMACIÓN REGIONAL:
-    - Colombia: Alta calidad de arábica, cultivos entre 1200-2000 m, variedades como Castillo, Colombia, Caturra
+    - Colombia: Alta calidad de arábica, cultivos entre 1200-2000 m, variedades como Castillo, Colombia, Caturra, Cenicafé 1
     - México: Producción en Chiapas, Veracruz y Oaxaca, principalmente varietales como Typica y Bourbon
     - Brasil: Mayor productor mundial, mecanización, cultivo a pleno sol, procesamiento natural
     - Centroamérica: Conocido por sus cafés de altura, sistemas agroforestales tradicionales
@@ -47,12 +48,10 @@ class CafeCultivationPrompt {
     // Crear una sesión de chat con el prompt del sistema
     final chat = model.startChat(
       history: [
-        Content.model([
-          TextPart(systemPrompt),
-        ]),
+        Content.model([TextPart(systemPrompt)]),
       ],
     );
-    
+
     return chat;
   }
 }
