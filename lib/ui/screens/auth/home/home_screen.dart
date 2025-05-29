@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:miapp_cafeconecta/models/farm_model.dart';
+import 'package:miapp_cafeconecta/ui/screens/auth/cursos/modulo_detalle_screen.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/farm/DetalleFincaScreen.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/farm/registrarKilos/registrar_kilos.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/home/widgets/app_bar/home_app_bar.dart';
@@ -9,6 +10,11 @@ import 'package:miapp_cafeconecta/controllers/auth_controller.dart';
 import 'package:miapp_cafeconecta/controllers/farm_controller.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/farm/add_farm_screen.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/login/login_screen.dart';
+import 'package:miapp_cafeconecta/ui/screens/auth/cursos/cursos_screen.dart';
+import 'package:miapp_cafeconecta/ui/screens/auth/ventas/registrar_ventas_screen.dart';
+import 'package:miapp_cafeconecta/ui/screens/auth/ventas/historial_venta_screen.dart';
+import 'package:miapp_cafeconecta/ui/screens/auth/ventas/venta_controller.dart'
+    as controllers;
 import 'package:provider/provider.dart';
 
 // Nueva clase para las opciones del menú
@@ -24,6 +30,7 @@ class HomeOption {
 final List<HomeOption> homeOptions = [
   HomeOption("Registrar Kilos", Icons.fitness_center, "/registrar_kilos"),
   HomeOption("Registrar Ventas", Icons.attach_money, "/registrar_ventas"),
+  HomeOption("Historial Ventas", Icons.history, "/historial_ventas"),
   HomeOption("Cerrar Sesión", Icons.logout, "/cerrar_sesion"),
 ];
 
@@ -130,6 +137,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _navigateWithVentaController(BuildContext context, Widget screen) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) => ChangeNotifierProvider.value(
+              value: controllers.VentaController(), // Usa .value constructor
+              child: screen,
+            ),
+      ),
+    );
+  }
+
   // Método modificado para manejar selecciones del menú
   void _handleMenuSelection(String route) {
     switch (route) {
@@ -140,11 +160,13 @@ class _HomeScreenState extends State<HomeScreen> {
         );
         break;
       case "/registrar_ventas":
-        // Implementar navegación a ventas cuando exista
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Función en desarrollo")));
+        _navigateWithVentaController(context, const RegistrarVentasScreen());
         break;
+
+      case "/historial_ventas":
+        _navigateWithVentaController(context, const HistorialVentasScreen());
+        break;
+
       case "/cerrar_sesion":
         final authController = Provider.of<AuthController>(
           context,
@@ -275,8 +297,9 @@ class _HomeScreenState extends State<HomeScreen> {
         break;
       case 1:
         // Navegar a cursos
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Sección de Cursos en desarrollo")),
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => CursosScreen()),
         );
         break;
       case 2:

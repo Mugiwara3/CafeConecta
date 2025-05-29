@@ -133,7 +133,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
       // Enviamos el prompt como un mensaje del usuario, pero no lo mostramos en la UI
       await _chat!.sendMessage(
-        Content.text("Instrucciones del sistema: $systemPrompt"),
+        Content.text("Instrucciones del sistema: " + systemPrompt),
       );
 
       // También enviamos una instrucción para que el modelo responda que entiende

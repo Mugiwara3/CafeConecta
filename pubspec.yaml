@@ -24,6 +24,10 @@ dependencies:
   table_calendar: ^3.0.9
   intl: ^0.18.1
   pdf: ^3.11.3
+  http: ^1.1.0
+  url_launcher: ^6.1.11
+  youtube_player_flutter: ^8.1.2
+  confetti: ^0.7.0
 
 dev_dependencies:
   change_app_package_name: ^1.1.0
@@ -34,7 +38,38 @@ dev_dependencies:
 flutter:
   assets:
     - lib/ui/screens/assets/images/logo.png
-    
+    - lib/ui/screens/assets/images/logo.png
+    - lib\ui\screens\assets\images\modulo1.png
+    - lib\ui\screens\assets\images\modulo2.png
+    - lib\ui\screens\assets\images\modulo3.png
+    - lib\ui\screens\assets\images\modulo4.png
+    - lib\ui\screens\assets\images\modulo5.png
+    - lib\ui\screens\assets\images\modulo6.jpg
+    - lib\ui\screens\assets\images\modulo1\condiciones_climaticas.png
+    - lib\ui\screens\assets\images\modulo1\historiaCafe.png
+    - lib\ui\screens\assets\images\modulo1\importancia.png
+    - lib\ui\screens\assets\images\modulo1\semilla.jpg
+    - lib\ui\screens\assets\images\modulo1\semillero.jpg
+    - lib\ui\screens\assets\images\modulo1\variedades.png
+    - lib\ui\screens\assets\images\modulo2\fertilizantes.png
+    - lib\ui\screens\assets\images\modulo2\manejoSombra.png
+    - lib\ui\screens\assets\images\modulo2\preparacion_suelo.png
+    - lib\ui\screens\assets\images\modulo2\siembraYtransplante.png
+    - lib\ui\screens\assets\images\modulo2\manejoIntegrado.png
+    - lib\ui\screens\assets\images\modulo3\enfermedades.png
+    - lib\ui\screens\assets\images\modulo3\monitoreo.png
+    - lib\ui\screens\assets\images\modulo3\plagas.png
+    - lib\ui\screens\assets\images\modulo3\practicasybiopreparados.png
+    - lib\ui\screens\assets\images\modulo4\cosecha_selectiva.png
+    - lib\ui\screens\assets\images\modulo4\lavado.png
+    - lib\ui\screens\assets\images\modulo4\puntoDmaduracion.png
+    - lib\ui\screens\assets\images\modulo4\secado.png
+    - lib\ui\screens\assets\images\modulo5\calidad_catacion.png
+    - lib\ui\screens\assets\images\modulo5\certificados.png
+    - lib\ui\screens\assets\images\modulo5\espulpado.png
+    - lib\ui\screens\assets\images\modulo5\clasificacion_grano.png
+    - lib\ui\screens\assets\images\modulo6\costos_entabilidad.png
+    - lib\ui\screens\assets\images\modulo6\estrategias_venta.png
+    - lib\ui\screens\assets\images\modulo6\marqueting.png
+
   uses-material-design: true
-
-

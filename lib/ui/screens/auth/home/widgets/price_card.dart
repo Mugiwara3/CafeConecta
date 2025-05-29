@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:miapp_cafeconecta/ui/screens/auth/price/precio_consulta_screen.dart';
 
 class PriceCard extends StatelessWidget {
   const PriceCard({super.key});
@@ -26,13 +27,20 @@ class PriceCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
               icon: const Icon(Icons.coffee, color: Colors.red),
-              label: const Text("Consultar", style: TextStyle(color: Colors.red)),
+              label: const Text(
+                "Consultar",
+                style: TextStyle(color: Colors.red),
+              ),
               onPressed: () {
-                // Implementar consulta de precios
+                // Navegar a la pantalla de consulta de precios
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const PrecioConsultaScreen(),
+                  ),
+                );
               },
             ),
           ],

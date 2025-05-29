@@ -9,7 +9,10 @@ void main() async {
   Provider.debugCheckInvalidValueType = null;
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Inicializar Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Inicializar localización para español
   await initializeDateFormatting('es_ES', null);
 
   runApp(const MyApp());
