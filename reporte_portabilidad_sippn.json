@@ -1,0 +1,56 @@
+{
+  "fecha_prueba": "2025-05-29T11:01:25.553579",
+  "url_probada": "http://localhost:63322#/login",
+  "resultados": {
+    "Chrome": {
+      "navegador": "Chrome",
+      "version": "136.0.7103.114",
+      "inicio_exitoso": true,
+      "elementos_homepage": false,
+      "navegacion_login": true,
+      "elementos_login": false,
+      "funcionalidad_login": false,
+      "tiempo_carga_promedio": 0.047081589698791504,
+      "errores_javascript": [],
+      "responsive": false,
+      "capturas": [
+        "capturas_portabilidad/chrome_inicio.png",
+        "capturas_portabilidad/chrome_login.png"
+      ],
+      "errores": [
+        "Error en formulario de login: Message: \nStacktrace:\n\tGetHandleVerifier [0x009AFC03+61635]\n\tGetHandleVerifier [0x009AFC44+61700]\n\t(No symbol) [0x007D05D3]\n\t(No symbol) [0x0081899E]\n\t(No symbol) [0x00818D3B]\n\t(No symbol) [0x00860E12]\n\t(No symbol) [0x0083D2E4]\n\t(No symbol) [0x0085E61B]\n\t(No symbol) [0x0083D096]\n\t(No symbol) [0x0080C840]\n\t(No symbol) [0x0080D6A4]\n\tGetHandleVerifier [0x00C34523+2701795]\n\tGetHandleVerifier [0x00C2FCA6+2683238]\n\tGetHandleVerifier [0x00C4A9EE+2793134]\n\tGetHandleVerifier [0x009C68C5+155013]\n\tGetHandleVerifier [0x009CCFAD+181357]\n\tGetHandleVerifier [0x009B7458+92440]\n\tGetHandleVerifier [0x009B7600+92864]\n\tGetHandleVerifier [0x009A1FF0+5296]\n\tBaseThreadInitThunk [0x76F55D49+25]\n\tRtlInitializeExceptionChain [0x77B0CF0B+107]\n\tRtlGetAppContainerNamedObjectPath [0x77B0CE91+561]\n"
+      ]
+    },
+    "Firefox": {
+      "navegador": "Firefox",
+      "error_inicializacion": true,
+      "errores": [
+        "No se pudo inicializar Firefox"
+      ]
+    },
+    "Edge": {
+      "navegador": "Edge",
+      "version": "136.0.3240.76",
+      "inicio_exitoso": true,
+      "elementos_homepage": false,
+      "navegacion_login": true,
+      "elementos_login": false,
+      "funcionalidad_login": false,
+      "tiempo_carga_promedio": 0.09952390193939209,
+      "errores_javascript": [],
+      "responsive": false,
+      "capturas": [
+        "capturas_portabilidad/edge_inicio.png",
+        "capturas_portabilidad/edge_login.png"
+      ],
+      "errores": [
+        "Error en formulario de login: Message: \nStacktrace:\n\tGetHandleVerifier [0x00007FF73F3EF935+25029]\n\t(No symbol) [0x00007FF73F344940]\n\tMicrosoft::Applications::Events::EventProperty::to_string [0x00007FF73F64AA3A+1947706]\n\t(No symbol) [0x00007FF73F157D88]\n\t(No symbol) [0x00007FF73F15804B]\n\t(No symbol) [0x00007FF73F198CA7]\n\t(No symbol) [0x00007FF73F1790CF]\n\t(No symbol) [0x00007FF73F14E15D]\n\t(No symbol) [0x00007FF73F196698]\n\t(No symbol) [0x00007FF73F178DF3]\n\t(No symbol) [0x00007FF73F14D6A6]\n\t(No symbol) [0x00007FF73F14CBB3]\n\t(No symbol) [0x00007FF73F14D4D3]\n\t(No symbol) [0x00007FF73F255F0D]\n\t(No symbol) [0x00007FF73F263AAF]\n\t(No symbol) [0x00007FF73F25C49F]\n\tMicrosoft::Applications::Events::EventProperty::to_string [0x00007FF73F4B49EA+284650]\n\t(No symbol) [0x00007FF73F3522D1]\n\t(No symbol) [0x00007FF73F34AD74]\n\t(No symbol) [0x00007FF73F34AEC3]\n\t(No symbol) [0x00007FF73F33CB06]\n\tBaseThreadInitThunk [0x00007FFE4904E8D7+23]\n\tRtlUserThreadStart [0x00007FFE4A8914FC+44]\n"
+      ]
+    }
+  },
+  "resumen": {
+    "total_navegadores": 3,
+    "navegadores_exitosos": 0,
+    "capturas_generadas": 4
+  }
+}
