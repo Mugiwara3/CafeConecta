@@ -1,0 +1,68 @@
+{
+  "aplicacion": "CafeConecta",
+  "fecha_prueba": "2025-05-29T11:54:59.600348",
+  "urls": {
+    "base": "http://localhost:3000",
+    "login": "http://localhost:3000/#/login",
+    "registro": "http://localhost:3000/#/register"
+  },
+  "resultados": {
+    "Chrome": {
+      "navegador": "Chrome",
+      "version": "136.0.7103.114",
+      "cafeconecta_cargado": true,
+      "pantalla_login_accesible": false,
+      "formulario_login_funcional": false,
+      "navegacion_registro_exitosa": true,
+      "formulario_registro_visible": false,
+      "responsive_design": false,
+      "tiempo_carga_promedio": 8.08980679512024,
+      "capturas": [
+        "capturas_portabilidad_cafeconecta/chrome_login_inicial.png",
+        "capturas_portabilidad_cafeconecta/chrome_registro.png",
+        "capturas_portabilidad_cafeconecta/chrome_iphone.png",
+        "capturas_portabilidad_cafeconecta/chrome_ipad.png",
+        "capturas_portabilidad_cafeconecta/chrome_desktop.png"
+      ],
+      "errores": []
+    },
+    "Firefox": {
+      "navegador": "Firefox",
+      "version": "139.0",
+      "cafeconecta_cargado": true,
+      "pantalla_login_accesible": false,
+      "formulario_login_funcional": false,
+      "navegacion_registro_exitosa": true,
+      "formulario_registro_visible": false,
+      "responsive_design": false,
+      "tiempo_carga_promedio": 9.130695819854736,
+      "capturas": [
+        "capturas_portabilidad_cafeconecta/firefox_login_inicial.png",
+        "capturas_portabilidad_cafeconecta/firefox_registro.png",
+        "capturas_portabilidad_cafeconecta/firefox_iphone.png",
+        "capturas_portabilidad_cafeconecta/firefox_ipad.png",
+        "capturas_portabilidad_cafeconecta/firefox_desktop.png"
+      ],
+      "errores": []
+    },
+    "Edge": {
+      "navegador": "Edge",
+      "version": "136.0.3240.76",
+      "cafeconecta_cargado": true,
+      "pantalla_login_accesible": false,
+      "formulario_login_funcional": false,
+      "navegacion_registro_exitosa": true,
+      "formulario_registro_visible": false,
+      "responsive_design": false,
+      "tiempo_carga_promedio": 8.10610318183899,
+      "capturas": [
+        "capturas_portabilidad_cafeconecta/edge_login_inicial.png",
+        "capturas_portabilidad_cafeconecta/edge_registro.png",
+        "capturas_portabilidad_cafeconecta/edge_iphone.png",
+        "capturas_portabilidad_cafeconecta/edge_ipad.png",
+        "capturas_portabilidad_cafeconecta/edge_desktop.png"
+      ],
+      "errores": []
+    }
+  }
+}

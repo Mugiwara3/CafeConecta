@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:miapp_cafeconecta/models/farm_model.dart';
 
 class FarmService {
@@ -51,12 +52,19 @@ class FarmService {
 
   // Actualizar una finca existente
   Future<void> updateFarm(Farm farm) async {
-    try {
-      await _firestore.collection(_collectionName).doc(farm.id).update(farm.toMap());
-    } catch (e) {
-      rethrow;
-    }
+  try {
+    // Preparar los datos para Firebase (sin el ID en el map)
+    final farmData = farm.toMap();
+    
+    // Actualizar el documento en Firestore
+    await _firestore.collection(_collectionName).doc(farm.id).update(farmData);
+    
+    debugPrint("Finca actualizada exitosamente: ${farm.id}");
+  } catch (e) {
+    debugPrint("Error al actualizar finca: $e");
+    rethrow;
   }
+}
 
   // Eliminar una finca
   Future<void> deleteFarm(String farmId) async {

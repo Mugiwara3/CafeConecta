@@ -431,13 +431,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _navigateToFarmDetail(Farm farm) async {
     try {
-      final updatedFarm = await Navigator.push(
+      final result = await Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => FincaDetalleScreen(farm: farm)),
       );
 
-      if (updatedFarm != null && updatedFarm is Farm && mounted) {
-        await _farmController.updateFarm(updatedFarm);
+      if (result == 'deleted') {
+        // Si se eliminó la finca, mostrar mensaje y refrescar la lista
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Finca eliminada correctamente"),
+              backgroundColor: Colors.green,
+            ),
+          );
+          setState(() {}); // Refrescar la lista de fincas
+        }
+      } else if (result != null && result is Farm && mounted) {
+        // Si se editó la finca, actualizar los datos
+        await _farmController.updateFarm(result);
       }
     } catch (e) {
       debugPrint("Error al navegar a detalles de finca: $e");

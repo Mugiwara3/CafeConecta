@@ -1,0 +1,10 @@
+REPORTE DE SEGURIDAD CAFECONECTA
+Fecha: 2025-05-29 12:24:11.788545
+URL: http://localhost:3000
+
+Vulnerabilidades encontradas: 4
+
+1. Posible bypass en /#/home
+2. Posible bypass en /#/registrar_kilos
+3. Posible bypass en /#/chat
+4. Ausencia de rate limiting
