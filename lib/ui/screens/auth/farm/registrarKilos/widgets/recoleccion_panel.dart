@@ -20,7 +20,7 @@ class RecoleccionPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = Provider.of<RecoleccionProvider>(context);
     final isExpanded = provider.expandedPanels[index] ?? false;
-    final totalGeneral = provider.calcularTotalGeneral(recoleccion.data, recoleccion.loteId);
+    final totalGeneral = provider.calcularTotalGeneral(recoleccion.data, recoleccion.loteld);
     
     // Obtener el nombre del día de la semana en español
     final fecha = DateFormat('yyyy-MM-dd').parse(recoleccion.fecha);
@@ -32,7 +32,7 @@ class RecoleccionPanel extends StatelessWidget {
         children: [
           // Encabezado del panel
           ListTile(
-            title: Text('${recoleccion.loteId} - ${recoleccion.fecha} ($diaSemana)'),
+            title: Text('${recoleccion.loteld} - ${recoleccion.fecha} ($diaSemana)'),
             subtitle: Text('Total recolectado: ${totalGeneral.toStringAsFixed(1)} kg'),
             trailing: Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
             onTap: () {
@@ -45,12 +45,12 @@ class RecoleccionPanel extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                children: provider.filtrarTrabajadores(recoleccion.loteId).map((trabajador) {
+                children: provider.filtrarTrabajadores(recoleccion.loteld).map((trabajador) {
                   return TrabajadorWidget(
                     recoleccionIndex: index,
                     trabajador: trabajador,
                     datosTrabajador: recoleccion.data[trabajador],
-                    loteId: recoleccion.loteId,
+                    loteId: recoleccion.loteld, loteld: '',
                   );
                 }).toList(),
               ),

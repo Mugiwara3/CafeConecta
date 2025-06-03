@@ -2,18 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:miapp_cafeconecta/ui/widgets/provider/recoleccion_provider.dart';
 import 'package:provider/provider.dart';
 
-
 class TrabajadorDialog extends StatefulWidget {
   final String? nombreTrabajador;
-  final String loteId;
-  final String loteName;
   final bool isEditing;
 
   const TrabajadorDialog({
     super.key,
     this.nombreTrabajador,
-    required this.loteId,
-    required this.loteName,
     this.isEditing = false,
   });
 
@@ -51,8 +46,6 @@ class _TrabajadorDialogState extends State<TrabajadorDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Lote: ${widget.loteName}', style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
             TextFormField(
               controller: _nombreController,
               decoration: const InputDecoration(
@@ -93,26 +86,22 @@ class _TrabajadorDialogState extends State<TrabajadorDialog> {
                     setState(() {
                       _isProcessing = true;
                     });
-                    
                     try {
                       final nuevoNombre = _nombreController.text.trim();
                       
                       if (widget.isEditing && widget.nombreTrabajador != null) {
-                        // Si el nombre cambió, eliminamos el trabajador anterior y agregamos uno nuevo
                         if (nuevoNombre != widget.nombreTrabajador) {
-                          await provider.eliminarTrabajador(widget.nombreTrabajador!, widget.loteId);
-                          await provider.agregarTrabajador(nuevoNombre, widget.loteId);
+                          await provider.eliminarTrabajador(widget.nombreTrabajador!);
+                          await provider.agregarTrabajador(nuevoNombre);
                         }
                       } else {
-                        // Agregar nuevo trabajador
-                        await provider.agregarTrabajador(nuevoNombre, widget.loteId);
+                        await provider.agregarTrabajador(nuevoNombre);
                       }
-                      
+
                       if (mounted) {
                         Navigator.of(context).pop();
                       }
                     } catch (e) {
-                      // Mostrar error
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Error: ${e.toString()}')),
@@ -142,7 +131,7 @@ class _TrabajadorDialogState extends State<TrabajadorDialog> {
       builder: (ctx) => AlertDialog(
         title: const Text('Confirmar Eliminación'),
         content: Text(
-          '¿Está seguro que desea eliminar al trabajador "${widget.nombreTrabajador}" del lote "${widget.loteName}"?\n\n'
+          '¿Está seguro que desea eliminar al trabajador "${widget.nombreTrabajador}"?\n\n'
           'Esta acción eliminará todos los datos de recolección asociados a este trabajador y no puede deshacerse.',
           style: const TextStyle(fontSize: 14),
         ),
@@ -154,20 +143,14 @@ class _TrabajadorDialogState extends State<TrabajadorDialog> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () async {
-              Navigator.of(ctx).pop(); // Cerrar diálogo de confirmación
-              
+              Navigator.of(ctx).pop();
               setState(() {
                 _isProcessing = true;
               });
-              
               try {
-                await provider.eliminarTrabajador(
-                  widget.nombreTrabajador!,
-                  widget.loteId,
-                );
-                
+                await provider.eliminarTrabajador(widget.nombreTrabajador!);
                 if (mounted) {
-                  Navigator.of(context).pop(); // Cerrar diálogo de edición
+                  Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Trabajador "${widget.nombreTrabajador}" eliminado correctamente'),
@@ -180,7 +163,7 @@ class _TrabajadorDialogState extends State<TrabajadorDialog> {
                     _isProcessing = false;
                   });
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error al eliminar: ${e.toString()}')),
+                    SnackBar(content: Text("Error al eliminar: ${e.toString()}")),
                   );
                 }
               }
