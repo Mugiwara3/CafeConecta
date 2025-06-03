@@ -1,3 +1,4 @@
+// venta_model.dart
 class Venta {
   final String id;
   final String vendedor;
@@ -29,7 +30,7 @@ class Venta {
       vendedor: map['vendedor'],
       fecha: map['fecha'],
       cafes: List<Map<String, dynamic>>.from(map['cafes']),
-      total: map['total'].toDouble(),
+      total: map['total'] is double ? map['total'] : map['total'].toDouble(),
     );
   }
 }
