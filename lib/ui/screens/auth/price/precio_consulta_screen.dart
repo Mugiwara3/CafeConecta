@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class PrecioConsultaScreen extends StatefulWidget {

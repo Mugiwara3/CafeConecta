@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:miapp_cafeconecta/controllers/auth_controller.dart';
-import 'package:miapp_cafeconecta/ui/screens/auth/farm/widgets/colombia_data.dart'; // Importar datos de Colombia
+import 'package:miapp_cafeconecta/ui/screens/auth/farm/widgets/colombia_data.dart';
 import 'package:miapp_cafeconecta/models/farm_model.dart';
 import 'package:provider/provider.dart';
 
@@ -23,18 +23,39 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
   final TextEditingController _alturaController = TextEditingController();
   final TextEditingController _veredaController = TextEditingController();
 
-  // Variables para los desplegables
   String? _departamentoSeleccionado;
   String? _municipioSeleccionado;
   List<String> _municipiosDisponibles = [];
 
-  // Función para actualizar los municipios según el departamento seleccionado
   void _actualizarMunicipios(String? departamento) {
     if (departamento != null) {
       setState(() {
         _municipiosDisponibles = ColombiaData.getMunicipios(departamento);
-        _municipioSeleccionado = null; // Reiniciar la selección del municipio
+        _municipioSeleccionado = null;
       });
+    }
+  }
+
+  // Validación para solo letras y espacios
+  bool _soloLetras(String value) {
+    return RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(value);
+  }
+
+  // Validación para números enteros positivos
+  bool _esEnteroPositivo(String value) {
+    try {
+      return int.parse(value) > 0;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Validación para números positivos (enteros o decimales)
+  bool _esNumeroPositivo(String value) {
+    try {
+      return double.parse(value) > 0;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -45,7 +66,6 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
       });
 
       try {
-        // Obtener el usuario actual
         final authController = Provider.of<AuthController>(
           context,
           listen: false,
@@ -64,13 +84,13 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
           return;
         }
 
-        // Crear objeto Farm basado en el modelo
         final farm = Farm(
-          id: '', // El ID será asignado por Firestore
+          id: '',
           name: _nombreController.text,
           hectares: double.tryParse(_hectareasTotalesController.text) ?? 0,
+          coffeeHectares: double.tryParse(_hectareasCafeController.text) ?? 0,
           altitude: double.tryParse(_alturaController.text) ?? 0,
-          plots: [], // Inicialmente sin lotes
+          plots: [],
           ownerId: user.uid,
           createdAt: DateTime.now(),
           department: _departamentoSeleccionado ?? '',
@@ -78,7 +98,6 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
           village: _veredaController.text,
         );
 
-        // Devolver el objeto Farm a HomeScreen
         Navigator.pop(context, farm);
       } catch (e) {
         if (mounted) {
@@ -118,36 +137,76 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
                     controller: _nombreController,
                     label: "Nombre de la finca",
                     icon: Icons.park,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo es obligatorio';
+                      }
+                      if (!_soloLetras(value)) {
+                        return 'Solo se permiten letras y espacios';
+                      }
+                      return null;
+                    },
                   ),
                   _buildInputField(
                     controller: _hectareasTotalesController,
                     label: "Hectáreas totales",
                     icon: Icons.square_foot,
                     keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo es obligatorio';
+                      }
+                      if (!_esEnteroPositivo(value)) {
+                        return 'Ingrese un número entero positivo';
+                      }
+                      return null;
+                    },
                   ),
                   _buildInputField(
                     controller: _hectareasCafeController,
                     label: "Hectáreas de café",
                     icon: Icons.eco_outlined,
                     keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo es obligatorio';
+                      }
+                      if (!_esEnteroPositivo(value)) {
+                        return 'Ingrese un número entero positivo';
+                      }
+                      return null;
+                    },
                   ),
                   _buildInputField(
                     controller: _alturaController,
                     label: "Altura (msnm)",
                     icon: Icons.height,
                     keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo es obligatorio';
+                      }
+                      if (!_esNumeroPositivo(value)) {
+                        return 'Ingrese un número positivo';
+                      }
+                      return null;
+                    },
                   ),
-
-                  // Desplegable para Departamento
                   _buildDepartamentoDropdown(),
-
-                  // Desplegable para Municipio
                   _buildMunicipioDropdown(),
-
                   _buildInputField(
                     controller: _veredaController,
                     label: "Vereda",
                     icon: Icons.map,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo es obligatorio';
+                      }
+                      if (!_soloLetras(value)) {
+                        return 'Solo se permiten letras y espacios';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 30),
                   ElevatedButton.icon(
@@ -190,7 +249,6 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
     );
   }
 
-  // Widget para el campo de Departamento con desplegable
   Widget _buildDepartamentoDropdown() {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10),
@@ -229,7 +287,6 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
     );
   }
 
-  // Widget para el campo de Municipio con desplegable
   Widget _buildMunicipioDropdown() {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10),
@@ -283,6 +340,7 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
     required String label,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
   }) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10),
@@ -298,11 +356,7 @@ class _AgregarFincaScreenState extends State<AgregarFincaScreen> {
             labelText: label,
             border: InputBorder.none,
           ),
-          validator:
-              (value) =>
-                  value == null || value.isEmpty
-                      ? "Este campo es obligatorio"
-                      : null,
+          validator: validator,
         ),
       ),
     );

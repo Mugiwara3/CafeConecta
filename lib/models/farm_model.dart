@@ -40,6 +40,7 @@ class Farm {
   final String id;
   final String name;
   final double hectares;
+  final double coffeeHectares; // Nuevo campo añadido
   final double altitude;
   final List<FarmPlot> plots;  
   final String ownerId;
@@ -52,13 +53,14 @@ class Farm {
     required this.id,
     required this.name,
     required this.hectares,
+    required this.coffeeHectares, // Añadido como requerido
     required this.altitude,
     required this.plots,
     required this.ownerId,
     required this.createdAt,
     required this.department,
     required this.municipality,
-    this.village = '',
+    required this.village, // Cambiado de opcional a requerido
   });
 
   factory Farm.fromMap(Map<String, dynamic> map) {
@@ -68,13 +70,12 @@ class Farm {
       id: map['id'] ?? '',
       name: map['name'] ?? '',
       hectares: (map['hectares'] ?? 0).toDouble(),
+      coffeeHectares: (map['coffeeHectares'] ?? map['hectareasCafe'] ?? 0).toDouble(), // Mapeo del nuevo campo
       altitude: (map['altitude'] ?? 0).toDouble(),
       plots: plotsData.map((plotMap) {
-        // Asegúrate de que plotMap sea un Map<String, dynamic>
         if (plotMap is Map) {
           return FarmPlot.fromMap(Map<String, dynamic>.from(plotMap));
         }
-        // Si no es un Map, retorna un FarmPlot vacío
         return FarmPlot(
           name: '',
           hectares: 0,
@@ -95,6 +96,7 @@ class Farm {
     return {
       'name': name,
       'hectares': hectares,
+      'coffeeHectares': coffeeHectares, // Incluido en el mapa
       'altitude': altitude,
       'plots': plots.map((plot) => plot.toMap()).toList(),
       'ownerId': ownerId,

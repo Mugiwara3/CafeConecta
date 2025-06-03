@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:miapp_cafeconecta/controllers/auth_controller.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/farm/widgets/colombia_data.dart';
 import 'package:miapp_cafeconecta/models/farm_model.dart';
-import 'package:miapp_cafeconecta/ui/screens/auth/farm/widgets/service/farm_service.dart';
+import 'package:provider/provider.dart';
 
 class EditarFincaScreen extends StatefulWidget {
   final Farm farm;
@@ -14,13 +15,13 @@ class EditarFincaScreen extends StatefulWidget {
 
 class _EditarFincaScreenState extends State<EditarFincaScreen> {
   final _formKey = GlobalKey<FormState>();
-  final FarmService _farmService = FarmService();
   bool _isLoading = false;
 
-  late final TextEditingController _nombreController;
-  late final TextEditingController _hectareasController;
-  late final TextEditingController _alturaController;
-  late final TextEditingController _veredaController;
+  late TextEditingController _nombreController;
+  late TextEditingController _hectareasTotalesController;
+  late TextEditingController _hectareasCafeController;
+  late TextEditingController _alturaController;
+  late TextEditingController _veredaController;
 
   String? _departamentoSeleccionado;
   String? _municipioSeleccionado;
@@ -29,88 +30,66 @@ class _EditarFincaScreenState extends State<EditarFincaScreen> {
   @override
   void initState() {
     super.initState();
-    _inicializarControladores();
-    _inicializarUbicacion();
+    _initializeControllers();
+    _loadInitialData();
   }
 
-  void _inicializarControladores() {
+  void _initializeControllers() {
     _nombreController = TextEditingController(text: widget.farm.name);
-    _hectareasController = TextEditingController(text: widget.farm.hectares.toString());
+    _hectareasTotalesController = TextEditingController(text: widget.farm.hectares.toString());
+    _hectareasCafeController = TextEditingController(text: widget.farm.coffeeHectares.toString());
     _alturaController = TextEditingController(text: widget.farm.altitude.toString());
     _veredaController = TextEditingController(text: widget.farm.village);
   }
 
-  void _inicializarUbicacion() {
-    // Debug: verificar datos de entrada
-    debugPrint("=== INICIALIZAR UBICACIÓN ===");
-    debugPrint("Department from farm: '${widget.farm.department}'");
-    debugPrint("Municipality from farm: '${widget.farm.municipality}'");
+  void _loadInitialData() {
+    _departamentoSeleccionado = widget.farm.department.isNotEmpty ? widget.farm.department : null;
+    _municipioSeleccionado = widget.farm.municipality.isNotEmpty ? widget.farm.municipality : null;
     
-    // Normalizar departamento
-    if (widget.farm.department.isNotEmpty) {
-      _departamentoSeleccionado = _encontrarDepartamentoCoincidente(widget.farm.department);
-      debugPrint("Departamento encontrado: '$_departamentoSeleccionado'");
-    }
-
-    // Si se encontró departamento, cargar municipios
     if (_departamentoSeleccionado != null) {
       _municipiosDisponibles = ColombiaData.getMunicipios(_departamentoSeleccionado!);
-      
-      // Normalizar municipio
-      if (widget.farm.municipality.isNotEmpty) {
-        _municipioSeleccionado = _encontrarMunicipioCoincidente(widget.farm.municipality);
-        debugPrint("Municipio encontrado: '$_municipioSeleccionado'");
-      }
     }
-    
-    debugPrint("==============================");
   }
 
-  String? _encontrarDepartamentoCoincidente(String departamentoBuscado) {
-    // Buscar departamento ignorando mayúsculas/minúsculas
-    for (String dept in ColombiaData.departamentos) {
-      if (dept.toLowerCase().trim() == departamentoBuscado.toLowerCase().trim()) {
-        return dept;
-      }
-    }
-    
-    // Si no se encuentra exacto, buscar por similitud
-    for (String dept in ColombiaData.departamentos) {
-      if (dept.toLowerCase().contains(departamentoBuscado.toLowerCase()) ||
-          departamentoBuscado.toLowerCase().contains(dept.toLowerCase())) {
-        return dept;
-      }
-    }
-    
-    return null;
-  }
-
-  String? _encontrarMunicipioCoincidente(String municipioBuscado) {
-    if (_departamentoSeleccionado == null) return null;
-    
-    for (String municipio in _municipiosDisponibles) {
-      if (municipio.toLowerCase().trim() == municipioBuscado.toLowerCase().trim()) {
-        return municipio;
-      }
-    }
-    
-    // Si no se encuentra exacto, buscar por similitud
-    for (String municipio in _municipiosDisponibles) {
-      if (municipio.toLowerCase().contains(municipioBuscado.toLowerCase()) ||
-          municipioBuscado.toLowerCase().contains(municipio.toLowerCase())) {
-        return municipio;
-      }
-    }
-    
-    return null;
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _hectareasTotalesController.dispose();
+    _hectareasCafeController.dispose();
+    _alturaController.dispose();
+    _veredaController.dispose();
+    super.dispose();
   }
 
   void _actualizarMunicipios(String? departamento) {
     if (departamento != null) {
       setState(() {
         _municipiosDisponibles = ColombiaData.getMunicipios(departamento);
-        _municipioSeleccionado = null; // Reset municipio cuando cambia departamento
+        _municipioSeleccionado = null;
       });
+    }
+  }
+
+  // Validación para solo letras y espacios
+  bool _soloLetras(String value) {
+    return RegExp(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$').hasMatch(value);
+  }
+
+  // Validación para números enteros positivos
+  bool _esEnteroPositivo(String value) {
+    try {
+      return int.parse(value) > 0;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Validación para números positivos (enteros o decimales)
+  bool _esNumeroPositivo(String value) {
+    try {
+      return double.parse(value) > 0;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -121,45 +100,45 @@ class _EditarFincaScreenState extends State<EditarFincaScreen> {
       });
 
       try {
-        final farmActualizada = Farm(
+        final authController = Provider.of<AuthController>(
+          context,
+          listen: false,
+        );
+        final user = authController.currentUser;
+
+        if (user == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Error: Usuario no autenticado"),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          return;
+        }
+
+        final updatedFarm = Farm(
           id: widget.farm.id,
-          name: _nombreController.text.trim(),
-          hectares: double.tryParse(_hectareasController.text) ?? widget.farm.hectares,
-          altitude: double.tryParse(_alturaController.text) ?? widget.farm.altitude,
-          plots: widget.farm.plots, // Mantener los lotes existentes
-          ownerId: widget.farm.ownerId,
-          createdAt: widget.farm.createdAt,
-          department: _departamentoSeleccionado ?? widget.farm.department,
-          municipality: _municipioSeleccionado ?? widget.farm.municipality,
-          village: _veredaController.text.trim(),
+          name: _nombreController.text,
+          hectares: double.tryParse(_hectareasTotalesController.text) ?? 0,
+          coffeeHectares: double.tryParse(_hectareasCafeController.text) ?? 0,
+          altitude: double.tryParse(_alturaController.text) ?? 0,
+          plots: widget.farm.plots, // Mantenemos los lotes existentes
+          ownerId: user.uid,
+          createdAt: widget.farm.createdAt, // Mantenemos la fecha original
+          department: _departamentoSeleccionado ?? '',
+          municipality: _municipioSeleccionado ?? '',
+          village: _veredaController.text,
         );
 
-        debugPrint("Actualizando finca con datos:");
-        debugPrint("- Department: '${farmActualizada.department}'");
-        debugPrint("- Municipality: '${farmActualizada.municipality}'");
-
-        await _farmService.updateFarm(farmActualizada);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("¡Finca actualizada con éxito!"),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
-          
-          await Future.delayed(const Duration(milliseconds: 500));
-          Navigator.pop(context, farmActualizada);
-        }
+        Navigator.pop(context, updatedFarm);
       } catch (e) {
-        debugPrint("Error al actualizar finca: $e");
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Error al actualizar: ${e.toString()}"),
+              content: Text("Error al guardar: ${e.toString()}"),
               backgroundColor: Colors.red,
-              duration: const Duration(seconds: 3),
             ),
           );
         }
@@ -174,29 +153,43 @@ class _EditarFincaScreenState extends State<EditarFincaScreen> {
   }
 
   Future<void> _confirmarEliminacion() async {
-    final confirmar = await showDialog<bool>(
+    final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Confirmar eliminación"),
+        title: Row(
+          children: [
+            Icon(Icons.warning, color: Colors.red[600]),
+            const SizedBox(width: 8),
+            const Text('Eliminar Finca'),
+          ],
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("¿Estás seguro de que quieres eliminar esta finca?"),
-            const SizedBox(height: 8),
-            const Text(
-              "Esta acción también eliminará:",
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              '¿Estás seguro de que deseas eliminar la finca "${widget.farm.name}"?',
+              style: const TextStyle(fontSize: 16),
             ),
-            Text("• Todos los lotes (${widget.farm.plots.length})"),
-            const Text("• Todos los registros de recolección"),
-            const Text("• Todos los trabajadores asociados"),
-            const SizedBox(height: 8),
-            const Text(
-              "Esta acción no se puede deshacer.",
-              style: TextStyle(
-                color: Colors.red,
-                fontWeight: FontWeight.bold,
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red[200]!),
+              ),
+              child: const Text(
+                '⚠️ ADVERTENCIA: Esta acción eliminará permanentemente:\n\n'
+                '• Todos los datos de la finca\n'
+                '• Todos los lotes asociados\n'
+                '• Todos los registros de recolección\n'
+                '• Todos los trabajadores asignados\n\n'
+                'Esta acción NO se puede deshacer.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.red,
+                ),
               ),
             ),
           ],
@@ -204,65 +197,23 @@ class _EditarFincaScreenState extends State<EditarFincaScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancelar"),
+            child: const Text('Cancelar'),
           ),
-          TextButton(
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text("Eliminar"),
+            child: const Text('Eliminar Finca'),
           ),
         ],
       ),
     );
 
-    if (confirmar == true) {
-      await _eliminarFinca();
+    if (confirm == true) {
+      Navigator.pop(context, 'delete');
     }
-  }
-
-  Future<void> _eliminarFinca() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      await _farmService.deleteFarm(widget.farm.id);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Finca eliminada correctamente"),
-            backgroundColor: Colors.green,
-          ),
-        );
-        
-        Navigator.pop(context, 'deleted');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Error al eliminar finca: ${e.toString()}"),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _nombreController.dispose();
-    _hectareasController.dispose();
-    _alturaController.dispose();
-    _veredaController.dispose();
-    super.dispose();
   }
 
   @override
@@ -273,9 +224,9 @@ class _EditarFincaScreenState extends State<EditarFincaScreen> {
         backgroundColor: Colors.brown[700],
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: _isLoading ? null : _confirmarEliminacion,
-            tooltip: "Eliminar finca",
+            icon: const Icon(Icons.delete_forever),
+            onPressed: _confirmarEliminacion,
+            tooltip: 'Eliminar Finca',
           ),
         ],
       ),
@@ -287,114 +238,98 @@ class _EditarFincaScreenState extends State<EditarFincaScreen> {
               key: _formKey,
               child: Column(
                 children: [
-                  // Información básica
-                  Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Información Básica",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildInputField(
-                            controller: _nombreController,
-                            label: "Nombre de la finca",
-                            icon: Icons.park,
-                          ),
-                          _buildInputField(
-                            controller: _hectareasController,
-                            label: "Hectáreas totales",
-                            icon: Icons.square_foot,
-                            keyboardType: TextInputType.number,
-                          ),
-                          _buildInputField(
-                            controller: _alturaController,
-                            label: "Altura (msnm)",
-                            icon: Icons.height,
-                            keyboardType: TextInputType.number,
-                          ),
-                        ],
-                      ),
-                    ),
+                  _buildInputField(
+                    controller: _nombreController,
+                    label: "Nombre de la finca",
+                    icon: Icons.park,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo es obligatorio';
+                      }
+                      if (!_soloLetras(value)) {
+                        return 'Solo se permiten letras y espacios';
+                      }
+                      return null;
+                    },
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // Ubicación
-                  Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Ubicación",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildDepartamentoDropdown(),
-                          _buildMunicipioDropdown(),
-                          _buildInputField(
-                            controller: _veredaController,
-                            label: "Vereda",
-                            icon: Icons.map,
-                          ),
-                        ],
-                      ),
-                    ),
+                  _buildInputField(
+                    controller: _hectareasTotalesController,
+                    label: "Hectáreas totales",
+                    icon: Icons.square_foot,
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo es obligatorio';
+                      }
+                      if (!_esEnteroPositivo(value)) {
+                        return 'Ingrese un número entero positivo';
+                      }
+                      return null;
+                    },
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // Información de lotes
-                  Card(
-                    elevation: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            "Lotes Registrados",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Total: ${widget.farm.plots.length} lotes",
-                            style: TextStyle(color: Colors.grey[600]),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            "Para modificar lotes, ve a la sección de detalles de la finca.",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  _buildInputField(
+                    controller: _hectareasCafeController,
+                    label: "Hectáreas de café",
+                    icon: Icons.eco_outlined,
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo es obligatorio';
+                      }
+                      if (!_esEnteroPositivo(value)) {
+                        return 'Ingrese un número entero positivo';
+                      }
+                      return null;
+                    },
                   ),
-
+                  _buildInputField(
+                    controller: _alturaController,
+                    label: "Altura (msnm)",
+                    icon: Icons.height,
+                    keyboardType: TextInputType.number,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo es obligatorio';
+                      }
+                      if (!_esNumeroPositivo(value)) {
+                        return 'Ingrese un número positivo';
+                      }
+                      return null;
+                    },
+                  ),
+                  _buildDepartamentoDropdown(),
+                  _buildMunicipioDropdown(),
+                  _buildInputField(
+                    controller: _veredaController,
+                    label: "Vereda",
+                    icon: Icons.map,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Este campo es obligatorio';
+                      }
+                      if (!_soloLetras(value)) {
+                        return 'Solo se permiten letras y espacios';
+                      }
+                      return null;
+                    },
+                  ),
                   const SizedBox(height: 30),
-
-                  // Botones de acción
                   Row(
                     children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _isLoading ? null : () => Navigator.pop(context),
+                          icon: const Icon(Icons.cancel),
+                          label: const Text("Cancelar"),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: _isLoading ? null : _guardarCambios,
@@ -413,29 +348,13 @@ class _EditarFincaScreenState extends State<EditarFincaScreen> {
                             backgroundColor: Colors.brown[700],
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
                           ),
                         ),
                       ),
                     ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Botón de eliminar
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _isLoading ? null : _confirmarEliminacion,
-                      icon: const Icon(Icons.delete_forever, color: Colors.red),
-                      label: const Text(
-                        "Eliminar Finca",
-                        style: TextStyle(color: Colors.red),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.red),
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -451,36 +370,11 @@ class _EditarFincaScreenState extends State<EditarFincaScreen> {
     );
   }
 
-  Widget _buildInputField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 10),
-      elevation: 1,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-        child: TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          decoration: InputDecoration(
-            icon: Icon(icon, color: Colors.brown[400]),
-            labelText: label,
-            border: InputBorder.none,
-          ),
-          validator: (value) =>
-              value == null || value.isEmpty ? "Este campo es obligatorio" : null,
-        ),
-      ),
-    );
-  }
-
   Widget _buildDepartamentoDropdown() {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10),
-      elevation: 1,
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
         child: DropdownButtonFormField<String>(
@@ -491,8 +385,10 @@ class _EditarFincaScreenState extends State<EditarFincaScreen> {
           ),
           isExpanded: true,
           value: _departamentoSeleccionado,
-          hint: const Text("Seleccione un departamento"),
-          items: ColombiaData.departamentos.map<DropdownMenuItem<String>>((String value) {
+          icon: const Icon(Icons.arrow_drop_down),
+          items: ColombiaData.departamentos.map<DropdownMenuItem<String>>((
+            String value,
+          ) {
             return DropdownMenuItem<String>(
               value: value,
               child: Text(value),
@@ -501,7 +397,6 @@ class _EditarFincaScreenState extends State<EditarFincaScreen> {
           onChanged: (String? newValue) {
             setState(() {
               _departamentoSeleccionado = newValue;
-              _municipioSeleccionado = null;
               _actualizarMunicipios(newValue);
             });
           },
@@ -514,7 +409,8 @@ class _EditarFincaScreenState extends State<EditarFincaScreen> {
   Widget _buildMunicipioDropdown() {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 10),
-      elevation: 1,
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
         child: DropdownButtonFormField<String>(
@@ -525,12 +421,10 @@ class _EditarFincaScreenState extends State<EditarFincaScreen> {
           ),
           isExpanded: true,
           value: _municipioSeleccionado,
-          hint: Text(
-            _departamentoSeleccionado == null
-                ? "Primero seleccione un departamento"
-                : "Seleccione un municipio",
-          ),
-          items: _municipiosDisponibles.map<DropdownMenuItem<String>>((String value) {
+          icon: const Icon(Icons.arrow_drop_down),
+          items: _municipiosDisponibles.map<DropdownMenuItem<String>>((
+            String value,
+          ) {
             return DropdownMenuItem<String>(
               value: value,
               child: Text(value),
@@ -547,7 +441,38 @@ class _EditarFincaScreenState extends State<EditarFincaScreen> {
               _departamentoSeleccionado != null && value == null
                   ? "Seleccione un municipio"
                   : null,
-          disabledHint: const Text("Seleccione primero un departamento"),
+          hint: Text(
+            _departamentoSeleccionado == null
+                ? "Primero seleccione un departamento"
+                : "Seleccione un municipio",
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        child: TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            icon: Icon(icon, color: Colors.brown[400]),
+            labelText: label,
+            border: InputBorder.none,
+          ),
+          validator: validator,
         ),
       ),
     );

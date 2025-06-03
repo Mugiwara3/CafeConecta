@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:miapp_cafeconecta/ui/screens/auth/price/precio_consulta_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PriceCard extends StatelessWidget {
   const PriceCard({super.key});
@@ -27,22 +27,24 @@ class PriceCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
-              icon: const Icon(Icons.coffee, color: Colors.red),
-              label: const Text(
-                "Consultar",
-                style: TextStyle(color: Colors.red),
-              ),
-              onPressed: () {
-                // Navegar a la pantalla de consulta de precios
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const PrecioConsultaScreen(),
-                  ),
-                );
-              },
-            ),
+  style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+  icon: const Icon(Icons.coffee, color: Colors.red),
+  label: const Text(
+    "Consultar",
+    style: TextStyle(color: Colors.red),
+  ),
+  onPressed: () async {
+    final url = Uri.parse('https://federaciondecafeteros.org/app/uploads/2019/10/precio_cafe.pdf');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      // Puedes mostrar un mensaje de error si no se puede abrir el enlace
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se puede abrir el enlace')),
+      );
+    }
+  },
+),
           ],
         ),
       ),

@@ -37,45 +37,145 @@ class _ModuloDetalleScreenState extends State<ModuloDetalleScreen> {
   }
 
   void _mostrarDialogoCompletado() {
+    final esModuloFinal = widget.modulo.id == 6;
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder:
-          (context) => AlertDialog(
-            title: const Text(
-              '¡Módulo Completado!',
-              style: TextStyle(
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
+          (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (esModuloFinal) ...[
+                    // Imagen de felicitaciones con manejo de errores mejorado
+                    Container(
+                      height: 180,
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(vertical: 10),
+                      child: Image.asset(
+                        'lib/ui/screens/assets/images/felicidades.png',
+                        height: 180,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          // Fallback con un ícono de celebración si la imagen falla
+                          return Container(
+                            height: 180,
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade50,
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(
+                                color: Colors.green.shade200,
+                                width: 2,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.celebration,
+                                  size: 80,
+                                  color: Colors.green.shade600,
+                                ),
+                                const SizedBox(height: 10),
+                                Icon(
+                                  Icons.emoji_events,
+                                  size: 40,
+                                  color: Colors.amber.shade600,
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      '¡Felicidades!',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Has completado con éxito todo el curso de caficultura',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.brown.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.brown.shade200),
+                      ),
+                      child: const Text(
+                        'Comercialización y mercados',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.brown,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ] else ...[
+                    const Text(
+                      '¡Módulo Completado!',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Icon(Icons.emoji_events, size: 60, color: Colors.amber),
+                    const SizedBox(height: 20),
+                    Text(
+                      widget.modulo.titulo,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                  const SizedBox(height: 30),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.brown[800],
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop(); // Cierra el diálogo
+                        Navigator.of(context).pop(true); // Retorna true
+                      },
+                      child: const Text(
+                        'Aceptar',
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  '¡Felicidades! Has finalizado este módulo con éxito.',
-                ),
-                const SizedBox(height: 20),
-                Icon(Icons.emoji_events, size: 60, color: Colors.amber),
-                const SizedBox(height: 20),
-                Text(
-                  widget.modulo.titulo,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Cierra el diálogo
-                  Navigator.of(
-                    context,
-                  ).pop(true); // Retorna true indicando completado
-                },
-                child: const Text('Aceptar'),
-              ),
-            ],
           ),
     );
   }
@@ -342,7 +442,7 @@ class _QuizPage extends StatelessWidget {
                           onRespuestaSeleccionada(index, value!);
                         },
                       );
-                    }).toList(),
+                    }),
                     if (respuestas[index] != null)
                       Text(
                         respuestas[index] == pregunta.respuestaCorrecta
@@ -360,7 +460,7 @@ class _QuizPage extends StatelessWidget {
                 ),
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );

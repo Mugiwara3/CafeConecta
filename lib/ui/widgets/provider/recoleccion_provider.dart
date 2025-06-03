@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:miapp_cafeconecta/models/farm_model.dart';
 import 'package:miapp_cafeconecta/models/recoleccion_model.dart';
 import 'package:miapp_cafeconecta/ui/screens/auth/farm/widgets/service/farm_service.dart';

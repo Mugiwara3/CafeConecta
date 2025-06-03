@@ -17,21 +17,59 @@ import 'package:miapp_cafeconecta/ui/screens/auth/ventas/venta_controller.dart'
     as controllers;
 import 'package:provider/provider.dart';
 
-// Nueva clase para las opciones del menú
+// Nueva clase para las opciones del menú con colores personalizados
 class HomeOption {
   final String title;
   final IconData icon;
   final String route;
+  final Color? iconColor;
+  final Color? backgroundColor;
+  final String? description;
 
-  HomeOption(this.title, this.icon, this.route);
+  HomeOption(
+    this.title,
+    this.icon,
+    this.route, {
+    this.iconColor,
+    this.backgroundColor,
+    this.description,
+  });
 }
 
-// Lista de opciones del menú
+// Lista de opciones del menú con mejor diseño
 final List<HomeOption> homeOptions = [
-  HomeOption("Registrar Kilos", Icons.fitness_center, "/registrar_kilos"),
-  HomeOption("Registrar Ventas", Icons.attach_money, "/registrar_ventas"),
-  HomeOption("Historial Ventas", Icons.history, "/historial_ventas"),
-  HomeOption("Cerrar Sesión", Icons.logout, "/cerrar_sesion"),
+  HomeOption(
+    "Registrar Kilos",
+    Icons.scale_outlined,
+    "/registrar_kilos",
+    iconColor: Colors.blue[600],
+    backgroundColor: Colors.blue[50],
+    description: "Registra la producción de café",
+  ),
+  HomeOption(
+    "Registrar Ventas",
+    Icons.point_of_sale_outlined,
+    "/registrar_ventas",
+    iconColor: Colors.green[600],
+    backgroundColor: Colors.green[50],
+    description: "Registra tus ventas de café",
+  ),
+  HomeOption(
+    "Historial Ventas",
+    Icons.analytics_outlined,
+    "/historial_ventas",
+    iconColor: Colors.orange[600],
+    backgroundColor: Colors.orange[50],
+    description: "Consulta tu historial de ventas",
+  ),
+  HomeOption(
+    "Cerrar Sesión",
+    Icons.logout_outlined,
+    "/cerrar_sesion",
+    iconColor: Colors.red[600],
+    backgroundColor: Colors.red[50],
+    description: "Salir de la aplicación",
+  ),
 ];
 
 class HomeScreen extends StatefulWidget {
@@ -68,32 +106,111 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: HomeAppBar(
         actions: [
+          // Menú desplegable mejorado
           PopupMenuButton<HomeOption>(
-            icon: const Icon(Icons.more_vert),
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.more_vert_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+            elevation: 12,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            offset: const Offset(-8, 8),
+            color: Colors.white,
+            surfaceTintColor: Colors.white,
+            shadowColor: Colors.black.withOpacity(0.2),
             onSelected: (HomeOption option) {
               _handleMenuSelection(option.route);
             },
             itemBuilder: (BuildContext context) {
               return homeOptions.map((HomeOption option) {
+                final isLogout = option.route == "/cerrar_sesion";
+
                 return PopupMenuItem<HomeOption>(
                   value: option,
-                  child: Row(
-                    children: [
-                      Icon(
-                        option.icon,
-                        color:
-                            option.route == "/cerrar_sesion"
-                                ? Colors.red
-                                : Colors.brown[700],
+                  padding: EdgeInsets.zero,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: option.backgroundColor ?? Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: (option.iconColor ?? Colors.grey).withOpacity(
+                          0.2,
+                        ),
+                        width: 1,
                       ),
-                      const SizedBox(width: 10),
-                      Text(option.title),
-                    ],
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 4,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      leading: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (option.iconColor ?? Colors.grey)
+                                  .withOpacity(0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          option.icon,
+                          color: option.iconColor ?? Colors.brown[700],
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        option.title,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                          color: isLogout ? Colors.red[700] : Colors.grey[800],
+                        ),
+                      ),
+                      subtitle:
+                          option.description != null
+                              ? Text(
+                                option.description!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              )
+                              : null,
+                      trailing: Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                        color: Colors.grey[400],
+                      ),
+                    ),
                   ),
                 );
               }).toList();
             },
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Stack(
@@ -319,17 +436,69 @@ class _HomeScreenState extends State<HomeScreen> {
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Cerrar sesión'),
-          content: const Text('¿Estás seguro que deseas cerrar sesión?'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.logout_outlined,
+                  color: Colors.red[600],
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Cerrar sesión',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          content: const Text(
+            '¿Estás seguro que deseas cerrar sesión?',
+            style: TextStyle(fontSize: 16),
+          ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Cancelar'),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+              ),
+              child: Text(
+                'Cancelar',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
             ),
-            TextButton(
-              child: const Text('Cerrar sesión'),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[600],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Cerrar sesión',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
                 await _signOut(authController);
@@ -436,20 +605,30 @@ class _HomeScreenState extends State<HomeScreen> {
         MaterialPageRoute(builder: (_) => FincaDetalleScreen(farm: farm)),
       );
 
-      if (result == 'deleted') {
-        // Si se eliminó la finca, mostrar mensaje y refrescar la lista
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Finca eliminada correctamente"),
-              backgroundColor: Colors.green,
-            ),
-          );
-          setState(() {}); // Refrescar la lista de fincas
+      if (result != null) {
+        if (result == true) {
+          // La finca fue eliminada, mostramos mensaje y refrescamos la lista
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Finca eliminada correctamente'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            setState(() {}); // Refrescar la lista
+          }
+        } else if (result is Farm) {
+          // La finca fue actualizada
+          await _farmController.updateFarm(result);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Finca actualizada correctamente'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
         }
-      } else if (result != null && result is Farm && mounted) {
-        // Si se editó la finca, actualizar los datos
-        await _farmController.updateFarm(result);
       }
     } catch (e) {
       debugPrint("Error al navegar a detalles de finca: $e");
